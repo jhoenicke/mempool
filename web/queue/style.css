@@ -1,0 +1,54 @@
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 13px;
+}
+a {
+    text-decoration: none;
+    color: #008;
+}
+.lnk {
+    margin: 1px;
+    text-size: 14px;
+    text-decoration: none;
+    border: 1px solid #888;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+.centered {
+    text-align: center;
+}
+
+.header {
+    font-size: 14px;
+    text-align: center;
+    background-color: #ddd;
+    padding: 5px;
+    margin: 10px;
+}
+
+td {
+    text-align: right;
+}
+#tooltip {
+    position: absolute;
+    display: none;
+    border: 1px solid #ddd;
+    padding: 2px;
+    background-color: #fff;
+    opacity: 0.8;
+}
+.button {
+    position: absolute;
+    cursor: pointer;
+}
+div.button {
+    font-size: smaller;
+    color: #999;
+    background-color: #eee;
+    padding: 2px;
+}
+.legend a.hide {
+    color: #ccc;
+}
