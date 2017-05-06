@@ -11,6 +11,6 @@ my $totalfee = shift @vals;
 $_ = "[$time,[$cnt],[$size],$totalfee],\n"'
 .mode csv
 .headers off
-select * from mempool;
+select * from mempool order by time;
 EOF
 
