@@ -16,6 +16,10 @@ a {
     padding-left: 3px;
     padding-right: 3px;
 }
+.selected {
+    color: #000;
+    border: 2px solid #000;
+}
 .centered {
     text-align: center;
 }
