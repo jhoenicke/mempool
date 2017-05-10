@@ -1,12 +1,31 @@
+/* 
+    Bitcoin Mempool Visualization
+    Copyright (C) 2017  Jochen Hoenicke
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var charts;
 var ranges = [ 0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500 ];
-var show = [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 16, 17, 18, 21 ];
+var show = [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 21 ];
+var reloader;
 var reloadInterval = 0;
 var reloading;
 var colors = [ "#349dac", "#c14540", "#7e5e82", "#84b200", "#a0d0cd",
 	       "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
-	       "#f69445", "#349dac", "#c14540", "#7e5e82", "#84b200",
-	       "#a0d0cd"];
+	       "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
+	       "#7e5e82", "#84b200", "#a0d0cd"];
 
 function legendClick(idx) {
     charts.forEach(function(chart) {
@@ -74,33 +93,28 @@ function tooltip(plot, event, pos, item) {
     }
 }
 
-function zoomReset(from, to) {
-    for (var i = 0; i < charts.length; i++) {
-	var plot = charts[i];
-	var opts = plot.getXAxes()[0].options
-	opts.min = from;
-	opts.max = to;
-	plot.setupGrid();
-	plot.draw();
-    }
-    if (reloadInterval > 0) {
-	reloading = setTimeout("window.location.reload();", reloadInterval);
-    }
-}
 function zoomHandler(event, ranges) {
+    clearTimeout(reloading);
+    reloading = null;
+
     // clamp the zooming to prevent eternal zoom
-    if (ranges.xaxis.to - ranges.xaxis.from < 0.00001)
-	ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+    if (ranges.xaxis.to - ranges.xaxis.from < 60000)
+	ranges.xaxis.to = ranges.xaxis.from + 60000
+
     for (var i = 0; i < charts.length; i++) {
 	var chart = charts[i];
 	var opts = chart.getXAxes()[0].options
 
-	clearTimeout(reloading);
 	opts.min = ranges.xaxis.from;
 	opts.max = ranges.xaxis.to;
         chart.setupGrid();
         chart.draw();
 	chart.clearSelection();
+    }
+    var data = charts[0].getData()[0].data;
+    var ival = data[1][0] - data[0][0]
+    if (ival > 90000) {
+	loadRange(opts.min, opts.max, zoomData);
     }
 }
 
@@ -115,38 +129,8 @@ function drawTitle(plot, cvs, title) {
     return cvs;
 }
 
-
-function showChart(raw, dataidx, container, filename, title, showInLegend, unit) {
-    var converted = [];
-    var j;
-    for (j = 0; j < show.length; j++) {
-	var sil = showInLegend;
-	var name = ranges[show[j]];
-	var legend = 
-	    j == show.length-1 ? (name+"+") :
-	    name+"-"+ranges[show[j+1]];
-	var color = colors[j];
-	converted.push({
-	    color: color,
-	    label: legend,
-	    idx: j,
-	    data: [],
-	});
-    }
-    var feeidx = j;
-    converted.push({
-	label: "total fee",
-	idx: feeidx,
-	yaxis: 2,
-	color: "#000",
-	stack: false,
-	lines: {
-	    show: false,
-	    fill: false,
-	    steps: false
-	},
-	data: [],
-    });
+function addData(converted, raw, dataidx, unit) {
+    var feeidx = show.length;
     for (i = 0; i < raw.length; i++) {
 	for (j = 0; j < show.length; j++) {
 	    function get(array, index) {
@@ -160,6 +144,43 @@ function showChart(raw, dataidx, container, filename, title, showInLegend, unit)
 	}
 	converted[feeidx].data.push([raw[i][0]*1000, raw[i][3]/1e8]);
     }
+    return converted;
+}
+
+function convertData(raw, dataidx, unit) {
+    var converted = [];
+    var j;
+    for (j = 0; j < show.length; j++) {
+	var name = ranges[show[j]];
+	var legend = 
+	    j == show.length-1 ? (name+"+") :
+	    name+"-"+ranges[show[j+1]];
+	var color = colors[j];
+	converted.push({
+	    color: color,
+	    label: legend,
+	    idx: j,
+	    data: [],
+	});
+    }
+    converted.push({
+	label: "total fee",
+	idx: show.length,
+	yaxis: 2,
+	color: "#000",
+	stack: false,
+	lines: {
+	    show: false,
+	    fill: false,
+	    steps: false
+	},
+	data: [],
+    });
+    return addData(converted, raw, dataidx, unit);
+}
+
+function showChart(raw, dataidx, container, filename, title, unit) {
+    var converted = convertData(raw, dataidx, unit);
     var config = {
 	series: {
 	    stack: 1,
@@ -191,23 +212,123 @@ function showChart(raw, dataidx, container, filename, title, showInLegend, unit)
 	tooltip(plot, event, pos, item);
     });
     $(plot.getPlaceholder()).bind("plotselected", zoomHandler);
-    // add zoom out button 
-    var from = plot.getXAxes()[0].options.min;
-    var to = plot.getXAxes()[0].options.max;
-    $('<div class="button" style="right:50px;top:5px">zoom out</div>').appendTo(plot.getPlaceholder()).click(function (e) {
-	e.preventDefault();
-	zoomReset(from, to);
-    });
     return plot;
 }
 
 
-function showMempool(rawdata, reloadival) {
-    var chart1 = showChart(rawdata, 1, "chartContainer1", "mempool", "Unconfirmed Transaction Count (Mempool)", false, 1)
-    var chart2 = showChart(rawdata, 2, "chartContainer2", "mempoolkb", "Mempool Size in kB", true, 1000.0)
+function showMempool(rawdata) {
+    var chart1 = showChart(rawdata, 1, "chartContainer1", "mempool", "Unconfirmed Transaction Count (Mempool)", 1)
+    var chart2 = showChart(rawdata, 2, "chartContainer2", "mempoolkb", "Mempool Size in kB", 1000.0)
     charts = [chart1, chart2];
-    reloadInterval = reloadival;
+    reloadInterval = 60000;
+    reloader = update;
     if (reloadInterval > 0) {
-	reloading = setTimeout("window.location.reload();", reloadInterval);
+	reloading = setTimeout(reloader, reloadInterval);
     }
+}
+
+function zoomData(rawdata) {
+    charts[0].setData(convertData(rawdata, 1, 1))
+    charts[1].setData(convertData(rawdata, 2, 1000.0))
+    for (var i = 0; i < 2; i++) {
+	var chart = charts[i];
+	chart.setupGrid();
+        chart.draw();
+    }
+}
+
+function loadData(rawdata) {
+    if (!charts) {
+	showMempool(rawdata);
+    } else {
+	charts[0].setData(convertData(rawdata, 1, 1))
+	charts[1].setData(convertData(rawdata, 2, 1000.0))
+	for (var i = 0; i < 2; i++) {
+	    var chart = charts[i];
+	    var opts = chart.getXAxes()[0].options
+	    opts.min = null;
+	    opts.max = null;
+	    chart.setupGrid();
+            chart.draw();
+	}
+	if (reloading) {
+	    clearTimeout(reloading);
+	}
+	if (reloadInterval > 0) {
+	    reloading = setTimeout(reloader, reloadInterval);
+	}
+    }
+}
+
+var periods = ["2h", "8h", "24h", "2d", "4d", "1w", "2w", "30d", "3m", "all"];
+function selectbutton(timespan) {
+    for (i = 0; i < periods.length; i++) {
+	if (periods[i] == timespan) {
+	    $("#lk"+periods[i]).addClass("selected");
+	} else {
+	    $("#lk"+periods[i]).removeClass("selected");
+	}
+    }
+}
+
+function loadRange(from, to, func) {
+    var increment = Math.floor((to - from) / 60000000);
+    if (increment < 1) {
+	increment = 1;
+    }
+    $.ajax({
+	url: "db.php",
+	data: { s: Math.floor(from/1000),
+		e: Math.floor(to/1000),
+		i: increment },
+	dataType: "jsonp",
+	jsonpCallback: "call",
+	jsonp: false,
+    }).done(func);
+}
+
+function update() {
+    loadRange(charts[0].getAxes().xaxis.max+1000, Date.now()+600000, function(rawdata) {
+	charts[0].setData(addData(charts[0].getData(), rawdata, 1, 1))
+	charts[1].setData(addData(charts[1].getData(), rawdata, 2, 1000.0))
+	for (var i = 0; i < 2; i++) {
+	    charts[i].setupGrid();
+            charts[i].draw();
+	}
+	reloading = setTimeout(reloader, reloadInterval);
+    });
+}
+
+function button(timespan) {
+    location.hash = "#" + timespan;
+    $.ajax({
+	url: timespan+".js",
+	data: "",
+	dataType: "jsonp",
+	jsonpCallback: "call",
+	jsonp: false,
+    }).done(loadData);
+    selectbutton(timespan);
+}
+
+function main() {
+    var timespan = location.hash;
+    if (timespan.length == 0) {
+	timespan = "24h";
+    } else {
+	timespan = timespan.substring(1);
+    }
+    var div = $("#periods");
+    var onclickfun = function(e) { button(e.target.text); };
+    for (i = 0; i < periods.length; i++) {
+	var name = periods[i];
+	var btn = document.createElement("a");
+	btn.text = name;
+	btn.href = "#"+name;
+	btn.onclick = onclickfun;
+	btn.className = "lnk";
+	btn.id = "lk"+name;
+	div.append(btn);
+    }
+    button(timespan);
 }

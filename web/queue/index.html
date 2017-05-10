@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Johoe's Mempool Size Statistics</title>
+    <script type="text/javascript" src="../flot/jquery.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.time.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.stack.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.resize.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.selection.min.js"></script>
+    <script type="text/javascript" src="../flot/jquery.flot.navigate.min.js"></script>
+    <script type="text/javascript" src="mempool.js?v=1.5"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="Content-Language" content="en"/>
+    <meta name="author" content="Jochen Hoenicke"/>
+    <meta name="keywords" content="Jochen Hoenicke, Bitcoin, Mempool, Statistics"/>
+    <meta name="description" content="Johoe's Mempool Size Statistics"/>
+    <link href="style.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+  <div id="periods" class="header">
+        <b>Johoe's Mempool Statistics</b> &ndash; Period: 
+    </div>
+        <div id="chartContainer1" style="width: 100%; height: 500px; margin-top: 15px;"></div>
+        <div id="chartContainer2" style="width: 100%; height: 500px; margin-top: 15px;"></div>
+	<div id="tooltip"></div>
+  <script type="text/javascript">
+     main();
+  </script>
+    <p>
+      This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per byte.  The data is generated from the data of my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.  The statistics from Apr 14-20, 2017 and Apr 27 is broken.
+      The idea is based on <a href="http://bitcoinqueue.com">bitcoinqueue.com</a>.
+    </p>
+    <p>The data is separated into different fee levels given in satoshi per bytes.  Transactions with less than 5 satoshi per bytes are not included in my statistics (they appear in the total in the tooltip, though).  The lowest colored stripe is for transactions with 5&ndash;10 satoshi per byte.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1000 kB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
+
+    <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.  You can also click in the legend to toggle the visibility of the toal fee statistics.</p>
+
+    <div class="centered">
+      <img src="qrcode.png" alt="1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ"/></div>
+    <div class="centered">
+        <p>Donation address:
+        <a href="bitcoin:1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ">1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ</a></p>
+    </div>
+    <div class="centered" style="font-size: 13px; margin: 20px;">
+	Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br/>
+        © 2016-2017 <a href="/">Jochen Hoenicke</a>
+    </div>
+</html>
