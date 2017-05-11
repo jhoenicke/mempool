@@ -42,11 +42,10 @@ entry (using `crontab -e`):
 
 ## Installation: Part 2 - Web service
 
-Install a web server of your choice. Then link/copy the web subdirectory 
-to the web root.  Finally link to the dynamic js files in `/dev/shm/mempool`.
+Install a web server of your choice.  For refreshing/zooming you need
+php and php-sqlite.  Then link/copy the web subdirectory to the web
+root.  Finally link to the dynamic js files in `/dev/shm/mempool`.
 
     cd $HOME/mempool/web/queue
-    ./mkhtml.sh
     sudo ln -s $HOME/mempool/web/* /var/www/html
     ln -s /dev/shm/mempool/*.js $HOME/mempool/web/queue/
-
