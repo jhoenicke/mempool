@@ -18,15 +18,16 @@
 
 var charts;
 var ranges = [ 0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 ];
-var show = [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24,25 ];
+var show = [ 0, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26,27 ];
 var reloader;
 var reloadInterval = 0;
 var reloading;
-var colors = [ "#349dac", "#c14540", "#7e5e82", "#84b200", "#a0d0cd",
+var colors = [ "#349dac", "#7e5e82", "#84b200", "#a0d0cd",
 	       "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
 	       "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
-	       "#7e5e82", "#84b200", "#4e7fbb", "#f69445", "#a0d0cd",
-	       "#c14540", "#123456", "#fe3dba", "#349d00"];
+	       "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
+	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
+               "#001080"];
 var feelevel = 0;
 var showFee = false;
 var data = [];
@@ -173,7 +174,7 @@ function updateData(plotdata, dataidx) {
 	    [ [ theData[j][0][0], 0 ],
 	      [theData[j][theData[j].length-1][0], 0]];
 	plotdata[j].lines.show = j >= feelevel;
-	plotdata[j].lines.stack = j >= feelevel ? 1 : false;
+	plotdata[j].stack = j >= feelevel ? 1 : false;
     }
     plotdata[show.length].data = showFee ? theData[show.length] : [];
     plotdata[show.length].lines.show = showFee;
@@ -194,7 +195,13 @@ function convertData(raw, dataidx, unit) {
 	    color: color,
 	    label: legend,
 	    idx: j,
-	    data: theData[j],
+	    stack: j >= feelevel ? 1 : false,
+	    lines: {
+	        show: j >= feelevel,
+	    },
+	    data: j >= feelevel ? theData[j] :
+		[ [ theData[j][0][0], 0 ],
+		 [theData[j][theData[j].length-1][0], 0]]
 	});
     }
     converted.push({
