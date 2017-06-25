@@ -28,19 +28,22 @@
   <script type="text/javascript">
      main();
   </script>
+  <div>
     <p>
       This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per byte.  The data is generated from my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
-      The idea is based on <a href="http://bitcoinqueue.com">bitcoinqueue.com</a>.
+      The idea is based on the retired service bitcoinqueue.com.
     </p>
     <p>The data is separated into different fee levels given in satoshi per bytes.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1000 kB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
 
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.  You can also click in the legend to toggle the visibility of the total fee statistics.</p>
+   </div>
 
     <div class="centered">
-      <img src="qrcode.png" alt="1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ"/></div>
-    <div class="centered">
-        <p>Donation address:
-        <a href="bitcoin:1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ">1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ</a></p>
+      <p><span class="cover pixelated" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAApElEQVQI12PABfgfr9rfwMCh9mFBAwP3CoN1QHJdBZi0BZIc2mVAcf5XQDVApc1A9dyP6vYxMHBeOBjZwMCz98cxBgZ20S5VBgZGFcsmBgZmb245oK5EsTQGBo6Di3wYGFgM93Q3MPD6r/oNFDcxOQIU71+9F8j+ZPmbAcg51g80/1H4KiBTn7ETaO/anv8g2+O6QWyjaKC4suZOBqAb9vvh9AQAHus19/nAmMMAAAAASUVORK5CYII=); display: inline-block;"></span><br/>
+        Donation Bitcoin:
+        <a href="bitcoin:1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ">1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ</a><br/>
+	Litecoin: MCQXbDS5bPsycpg2LTVPQPLrB9NjoF4VJd (36CPHL27eH2YpKQ8EaW3ak6SrSnHqahkxz)<br/>
+	Ethereum: <span class="cover pixelated" style="width: 20px;height:20px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;"></span>&nbsp;mempool.hoenicke.eth</p>
     </div>
     <div class="centered" style="font-size: 13px; margin: 20px;">
 	Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br/>

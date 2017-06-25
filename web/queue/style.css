@@ -56,3 +56,13 @@ div.button {
 .legend a.hide {
     color: #ccc;
 }
+.pixelated {
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+}
+.cover {
+    background-size: cover;
+    background-repeat: no-repeat;
+}
