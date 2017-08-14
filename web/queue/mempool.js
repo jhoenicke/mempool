@@ -18,30 +18,26 @@
 
 var charts;
 var ranges = [ 0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 ];
-var show = [ 0, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26,27 ];
+var show = [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26,27 ];
 var reloader;
 var reloadInterval = 0;
 var reloading;
-var colors = [ "#349dac", "#7e5e82", "#84b200", "#a0d0cd",
+var colors = [ "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
 	       "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
 	       "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
 	       "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
 	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
                "#001080"];
+var units = [ "tx", "kB", "BTC" ];
+var precisions = [ 0, 0, 3];
 var feelevel = 0;
-var showFee = false;
 var data = [];
 
 function legendClick(idx) {
-    if (idx == show.length) {
-	showFee = !showFee;
-    } else {
-	feelevel = idx;
-    }
-    for (var i = 0;  i < 2; i++) {
+    feelevel = idx;
+    for (var i = 0; i < 3; i++) {
 	var data = charts[i].getData();
 	data = updateData(data, i);
-        charts[i].getOptions().yaxes[1].show = showFee;
 	charts[i].setData(data);
 	charts[i].setupGrid();
         charts[i].draw();
@@ -51,7 +47,8 @@ function legendClick(idx) {
 function tooltip(dataidx, event, pos, item) {
     var plot = charts[dataidx];
     var theData = data[dataidx];
-    var unit = dataidx == 0 ? "tx" : "kB";
+    var unit = units[dataidx];
+    var prec = precisions[dataidx];
     var series = theData[0];
     var xIndex = 0;
     if (item) {
@@ -78,9 +75,8 @@ function tooltip(dataidx, event, pos, item) {
 	    sum = sum + theData[i][xIndex][1];
 	    var value = ranges[show[i]];
 	    str = str + "<tr><td>" + (value == 0 ? "total" : value + "+") + 
-		":</td><td>" + Math.round(sum).toFixed(0).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
+		":</td><td>" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
 	}
-	str = str + "<tr><td>total fee:</td><td>" + theData[show.length][xIndex][1].toFixed(4) + "&nbsp;BTC</td></tr>";
 	str = str + "</table>";
 	
 	var tip = $("#tooltip");
@@ -176,8 +172,6 @@ function updateData(plotdata, dataidx) {
 	plotdata[j].lines.show = j >= feelevel;
 	plotdata[j].stack = j >= feelevel ? 1 : false;
     }
-    plotdata[show.length].data = showFee ? theData[show.length] : [];
-    plotdata[show.length].lines.show = showFee;
     return plotdata;
 }
 
@@ -204,19 +198,6 @@ function convertData(raw, dataidx, unit) {
 		 [theData[j][theData[j].length-1][0], 0]]
 	});
     }
-    converted.push({
-	label: "total fee",
-	idx: show.length,
-	yaxis: 2,
-	color: "#000",
-	stack: false,
-	lines: {
-	    show: false,
-	    fill: false,
-	    steps: false
-	},
-	data: theData[show.length],
-    });
     return converted;
 }
 
@@ -234,7 +215,6 @@ function showChart(raw, dataidx, container, filename, title, unit) {
 	},
 	selection: { mode: "x" },
 	xaxis: { mode: "time", timezone: "browser" },
-	yaxes: [ {}, { show: false, position: "right", min: 0}],
 	legend: { position: "nw", sorted: "reverse",
 		  labelFormatter: function(label, series) {
 		      return '<a href="#"'+
@@ -261,7 +241,8 @@ function showChart(raw, dataidx, container, filename, title, unit) {
 function showMempool(rawdata) {
     var chart1 = showChart(rawdata, 0, "chartContainer1", "mempool", "Unconfirmed Transaction Count (Mempool)", 1)
     var chart2 = showChart(rawdata, 1, "chartContainer2", "mempoolkb", "Mempool Size in kB", 1000.0)
-    charts = [chart1, chart2];
+    var chart3 = showChart(rawdata, 2, "chartContainer3", "mempoolfee", "Pending Transaction Fee in BTC", 100000000.0)
+    charts = [chart1, chart2, chart3];
     reloadInterval = 60000;
     reloader = update;
     if (reloadInterval > 0) {
@@ -272,9 +253,11 @@ function showMempool(rawdata) {
 function zoomData(rawdata) {
     storeData(rawdata, 0, 1);
     storeData(rawdata, 1, 1000.0);
-    charts[0].setData(updateData(charts[0].getData(), 0));
-    charts[1].setData(updateData(charts[1].getData(), 1));
-    for (var i = 0; i < 2; i++) {
+    storeData(rawdata, 2, 100000000.0);
+    for (var i = 0; i < 3; i++) {
+	charts[i].setData(updateData(charts[i].getData(), i));
+    }
+    for (var i = 0; i < 3; i++) {
 	var chart = charts[i];
 	chart.setupGrid();
         chart.draw();
@@ -287,9 +270,11 @@ function loadData(rawdata) {
     } else {
 	storeData(rawdata, 0, 1);
 	storeData(rawdata, 1, 1000.0);
-	charts[0].setData(updateData(charts[0].getData(), 0));
-	charts[1].setData(updateData(charts[1].getData(), 1));
-	for (var i = 0; i < 2; i++) {
+	storeData(rawdata, 2, 100000000.0);
+	for (var i = 0; i < 3; i++) {
+	    charts[i].setData(updateData(charts[i].getData(), i));
+	}
+	for (var i = 0; i < 3; i++) {
 	    var chart = charts[i];
 	    var opts = chart.getXAxes()[0].options
 	    opts.min = null;
@@ -337,9 +322,9 @@ function update() {
     loadRange(charts[0].getAxes().xaxis.max+1000, Date.now()+600000, function(rawdata) {
 	addData(rawdata, 0, 1);
 	addData(rawdata, 1, 1000.0);
-	charts[0].setData(updateData(charts[0].getData(), 0));
-	charts[1].setData(updateData(charts[1].getData(), 1));
-	for (var i = 0; i < 2; i++) {
+	addData(rawdata, 2, 100000000.0);
+	for (var i = 0; i < 3; i++) {
+	    charts[i].setData(updateData(charts[i].getData(), i));
 	    charts[i].setupGrid();
             charts[i].draw();
 	}

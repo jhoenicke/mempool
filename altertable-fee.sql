@@ -1,3 +1,6 @@
+BEGIN TRANSACTION;
+ALTER TABLE mempool RENAME to oldmempool;
+
 CREATE TABLE mempool (
     time INTEGER NOT NULL,
     cnt0 INTEGER,
@@ -109,3 +112,17 @@ CREATE TABLE mempool (
     fee34 INTEGER,
     fee35 INTEGER
 );
+
+INSERT INTO mempool (time,
+   cnt0, cnt1, cnt2, cnt3, cnt4, cnt5, cnt6, cnt7, cnt8, cnt9,
+   cnt10, cnt11, cnt12, cnt13, cnt14, cnt15, cnt16, cnt17, cnt18, cnt19,
+   cnt20, cnt21, cnt22, cnt23, cnt24, cnt25,
+   cnt26, cnt27, cnt28, cnt29, cnt30, cnt31, cnt32, cnt33, cnt34, cnt35,
+   size0, size1, size2, size3, size4, size5, size6, size7, size8, size9,
+   size10, size11, size12, size13, size14, size15, size16, size17, size18, size19,
+   size20, size21, size22, size23, size24, size25,
+   size26, size27, size28, size29, size30, size31, size32, size33, size34, size35,
+   fee0)
+  SELECT * from oldmempool;
+DROP TABLE oldmempool;
+COMMIT;

@@ -7,8 +7,8 @@ my @vals = map { $_ || 0 } (split ",", $_, -1);
 my $time = shift @vals;
 my $cnt  = join(",", splice(@vals, 0, 36));
 my $size  = join(",", splice(@vals, 0, 36));
-my $totalfee = shift @vals;
-$_ = "[$time,[$cnt],[$size],$totalfee],\n"'
+my $fee  = join(",", splice(@vals, 0, 36));
+$_ = "[$time,[$cnt],[$size],[$fee]],\n"'
 .mode csv
 .headers off
 select * from mempool order by time;

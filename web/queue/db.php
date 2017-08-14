@@ -52,12 +52,13 @@ try {
 	    $ctr--;
 	    continue;
 	}
-	for ($i = 0; $i < 73; $i++) {
+	for ($i = 0; $i < 3*36+1; $i++) {
 	    if (!isset($row[1+$i])) { $row[1+$i] = 0; };
 	}
     	echo $comma.'['.$row[0].',['.
 	     join(',', array_slice($row, 1, 36)).'],['.
-	     join(',', array_slice($row, 37, 36)).'],'.$row[73].']';
+	     join(',', array_slice($row, 37, 36)).'],['.
+	     join(',', array_slice($row, 73, 36)).']]';
 	$comma = ",\n";
 	$ctr = $increment;
     }
