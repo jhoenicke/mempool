@@ -28,8 +28,8 @@ var colors = [ "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
 	       "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
 	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
                "#001080"];
-var units = [ "tx", "kB", "BTC" ];
-var precisions = [ 0, 0, 3];
+var units = [ "tx", "MB", "BTC" ];
+var precisions = [ 0, 3, 3];
 var feelevel = 0;
 var data = [];
 
@@ -240,10 +240,10 @@ function showChart(raw, dataidx, container, filename, title, unit) {
 
 function showMempool(rawdata) {
     var chart1 = showChart(rawdata, 0, "chartContainer1", "mempool", "Unconfirmed Transaction Count (Mempool)", 1)
-    var chart2 = showChart(rawdata, 1, "chartContainer2", "mempoolkb", "Mempool Size in kB", 1000.0)
+    var chart2 = showChart(rawdata, 1, "chartContainer2", "mempoolmb", "Mempool Size in MB", 1000000.0)
     var chart3 = showChart(rawdata, 2, "chartContainer3", "mempoolfee", "Pending Transaction Fee in BTC", 100000000.0)
     charts = [chart1, chart2, chart3];
-    reloadInterval = 60000;
+    reloadInterval = 300000;
     reloader = update;
     if (reloadInterval > 0) {
 	reloading = setTimeout(reloader, reloadInterval);
@@ -252,7 +252,7 @@ function showMempool(rawdata) {
 
 function zoomData(rawdata) {
     storeData(rawdata, 0, 1);
-    storeData(rawdata, 1, 1000.0);
+    storeData(rawdata, 1, 1000000.0);
     storeData(rawdata, 2, 100000000.0);
     for (var i = 0; i < 3; i++) {
 	charts[i].setData(updateData(charts[i].getData(), i));
@@ -269,7 +269,7 @@ function loadData(rawdata) {
 	showMempool(rawdata);
     } else {
 	storeData(rawdata, 0, 1);
-	storeData(rawdata, 1, 1000.0);
+	storeData(rawdata, 1, 1000000.0);
 	storeData(rawdata, 2, 100000000.0);
 	for (var i = 0; i < 3; i++) {
 	    charts[i].setData(updateData(charts[i].getData(), i));
@@ -321,7 +321,7 @@ function loadRange(from, to, func) {
 function update() {
     loadRange(charts[0].getAxes().xaxis.max+1000, Date.now()+600000, function(rawdata) {
 	addData(rawdata, 0, 1);
-	addData(rawdata, 1, 1000.0);
+	addData(rawdata, 1, 1000000.0);
 	addData(rawdata, 2, 100000000.0);
 	for (var i = 0; i < 3; i++) {
 	    charts[i].setData(updateData(charts[i].getData(), i));
