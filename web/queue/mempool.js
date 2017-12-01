@@ -69,16 +69,29 @@ function tooltip(dataidx, event, pos, item) {
     if (xIndex) {
 	var time = series[xIndex][0];
 	time = $.plot.formatDate($.plot.dateGenerator(time, {timezone: "browser"}), "%b %d, %H:%M");
-	var str = "<strong>"+time+"</strong><br/><table>"
+	var str = "<strong>"+time+"</strong><br/><table>";
+	var yIndex = 0;
+	var sum = 0
+	for (var i = 0; i < show.length; i++) {
+		sum = sum + theData[i][xIndex][1];
+		if (sum < pos.y) {
+			yIndex = i + 1;
+		}
+	};
+
 	var sum = 0
 	for (var i = show.length - 1; i >= 0; i--) {
-	    sum = sum + theData[i][xIndex][1];
-	    var value = ranges[show[i]];
-	    str = str + "<tr><td>" + (value == 0 ? "total" : value + "+") + 
-		":</td><td>" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
-	}
+		sum = sum + theData[i][xIndex][1];
+		var value = ranges[show[i]];
+		if (i === yIndex) {
+			bg_col = colors[yIndex];
+		} else {
+			bg_col = "#fff"
+		};
+		str = str + "<tr style=\"background-color: " + bg_col + "\"><td>" + (value == 0 ? "total" : value + "+") +
+    ":</td><td>" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
+  }
 	str = str + "</table>";
-	
 	var tip = $("#tooltip");
         var totalTipWidth = tip.outerWidth();
         var totalTipHeight = tip.outerHeight();
