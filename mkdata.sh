@@ -40,4 +40,4 @@ createfile_filtered 1w 10080 7
 createfile_filtered 2w 20160 14
 createfile_filtered 30d 43200 30
 createfile_filtered 3m 131040 90
-createfile_all 120
+createfile_all 270
