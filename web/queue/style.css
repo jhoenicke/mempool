@@ -35,6 +35,10 @@ a {
 td {
     text-align: right;
 }
+.highlight {
+    font-weight: bold;
+    color: white;
+}
 #tooltip {
     position: absolute;
     display: none;

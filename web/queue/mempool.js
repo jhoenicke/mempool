@@ -18,16 +18,17 @@
 
 var charts;
 var ranges = [ 0, 1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1400, 2000, 3000, 5000, 7000, 10000 ];
-var show = [ 0, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,24,25,26, 27, 28, 29, 31, 33, 37 ];
+var show = [ 0, 1, 2, 3, 4, 5, 6, 8, 10, 13, 15, 18, 23, 27, 31, 37];
 var reloader;
 var reloadInterval = 0;
 var reloading;
-var colors = [ "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
+var colors = [ "#535154", "#001080",
+               "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
 	       "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
 	       "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
 	       "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
-	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
-               "#001080", "#ffff00", "#20c020", "#0000c0" ];
+	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed", 
+               "#001080"];
 var units = [ "tx", "MB", "BTC" ];
 var precisions = [ 0, 3, 3];
 var feelevel = 0;
@@ -68,14 +69,28 @@ function tooltip(dataidx, event, pos, item) {
     }
     if (xIndex) {
 	var time = series[xIndex][0];
+	var yIndex = feelevel;
+	var sum = 0
+	for (var i = feelevel; i < show.length; i++) {
+	    sum = sum + theData[i][xIndex][1];
+	    if (sum < pos.y) {
+		yIndex = i + 1;
+            }
+        }
 	time = $.plot.formatDate($.plot.dateGenerator(time, {timezone: "browser"}), "%b %d, %H:%M");
-	var str = "<strong>"+time+"</strong><br/><table>"
+	var str = "<strong>"+time+"</strong><br/><table style=\"border-collapse: collapse;\">"
 	var sum = 0
 	for (var i = show.length - 1; i >= 0; i--) {
 	    sum = sum + theData[i][xIndex][1];
 	    var value = ranges[show[i]];
-	    str = str + "<tr><td>" + (value == 0 ? "total" : value + "+") + 
-		":</td><td>" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
+	    var rowcolor = "";
+	    var highlight = "";
+	    if (i == yIndex) {
+		rowcolor = ' style="background-color: ' + colors[i] + '"';
+		highlight = ' class="highlight"';
+	    }
+	    str = str + "<tr" + rowcolor + "><td" + highlight + ">" + (value == 0 ? "total" : value + "+") + 
+		":&nbsp;</td><td" + highlight + ">" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
 	}
 	str = str + "</table>";
 	
