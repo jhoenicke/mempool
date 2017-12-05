@@ -5,19 +5,19 @@ use List::Util qw[min max];
 my $SQLITE="sqlite3";
 my $MYSQL="mysql";
 my $MEMPOOLLOG="mempool.log";
-my $MEMPOOLDB="mempool.s3db";
 my $MYSQLMEMPOOLDB="btc_mempool";
 
-my @feelimit=(0.0001,1,2,5,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1400,2000,3000,5000,7000,10000);
+my @feelimit=(0.0001,1,2,3,4,5,6,7,8,10,12,14,17,20,25,30,40,50,60,70,80,100,120,140,170,200,250,300,400,500,600,700,800,1000,1200,1400,1700,2000,2500,3000,4000,5000,6000,7000,8000,10000,2100000000000000);
 my @total=();
 my @count=();
 my @fees=();
 my $time = time();
-for ($i = 0; $i< @feelimit; $i++) {
+for ($i = 0; $i< @feelimit - 1; $i++) {
     $total[$i] = 0;
     $count[$i] = 0;
     $fees[$i] = 0;
 }
+my $found = 0;
 while(<>) {
     /"size": (\d+)/ and $size = $1;
     /"ancestorsize": (\d+)/ and $asize = $1;
@@ -31,16 +31,17 @@ while(<>) {
 	$tfpb = ($afees + $dfees - $fee) / ($asize + $dsize - $size);
 	$fpb = $fee / $size;
 	$feeperbyte = max($tfpb, min($fpb, $afpb));
-	for ($i = 0; $i< @feelimit; $i++) {
-	    if ($feeperbyte >= $feelimit[$i]) {
+	for ($i = 0; $i< @feelimit-1; $i++) {
+	    if ($feeperbyte >= $feelimit[$i] && $feeperbyte < $feelimit[$i+1]) {
 		$total[$i] += $size;
 		$count[$i]++;
 		$fees[$i] += $fee;
 	    }
 	}
+	$found = 1;
     }
 }
-if ($count[0]) {
+if ($found) {
     my $cnt  = join(",", @count);
     my $size = join(",", @total);
     my $fee  = join(",", @fees);

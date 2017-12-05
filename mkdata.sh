@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MEMPOOL=mempool.log
-DESTDIR=/dev/shm/mempool
+DESTDIR=/dev/shm/mempool-btc
 mkdir -p $DESTDIR
 
 createfile() {
@@ -40,4 +40,6 @@ createfile_filtered 1w 10080 7
 createfile_filtered 2w 20160 14
 createfile_filtered 30d 43200 30
 createfile_filtered 3m 131040 90
-createfile_all 270
+createfile_filtered 6m 262080 180
+createfile_filtered 1y 524160 360
+createfile_all 360

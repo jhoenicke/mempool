@@ -24,6 +24,8 @@ $dbuser = "www";
 $dbpass = "<redacted>";
 $dboptions = array();
 
+$feelevels = 46;
+
 try {
     $db = new PDO($dbdsn, $dbuser, $dbpass, $dboptions);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -47,23 +49,15 @@ try {
     echo 'call([';
     $comma="";
     while ($row = $query->fetch(PDO::FETCH_NUM)) {
-	for ($i = 0; $i < 3*44+1; $i++) {
+	for ($i = 0; $i < 3*$feelevels+1; $i++) {
 	    if (!isset($row[$i])) {
-                if ($i == 1 || $i == 2) {
-                   $row[$i] = $row[3];
-                } else if ($i == 1+44 || $i == 2+44) {
-                   $row[$i] = $row[3+44];
-                } else if ($i == 1+88 || $i == 2+88) {
-                   $row[$i] = $row[3+88];
-                } else {
-                   $row[$i] = 0;
-                }
+                $row[$i] = 0;
             }
 	}
     	echo $comma.'['.$row[0].',['.
-	     join(',', array_slice($row, 1, 44)).'],['.
-	     join(',', array_slice($row, 45, 44)).'],['.
-	     join(',', array_slice($row, 89, 44)).']]';
+	     join(',', array_slice($row, 1, $feelevels)).'],['.
+	     join(',', array_slice($row, 1 + $feelevels, $feelevels)).'],['.
+	     join(',', array_slice($row, 1 + 2*$feelevels, $feelevels)).']]';
 	$comma = ",\n";
     }
     echo "]);\n";

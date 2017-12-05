@@ -43,12 +43,12 @@ webinterface won't work.
     password=<secret password>
     EOF
     cd mempool
-    mysql btc_mempool < mempool-create.sql
+    perl mempool-create.pl | mysql btc_mempool
     ./mempool.sh
 
 You are almost ready now.  Check that everything works.  There should be a
 file `mempool.log` containing one line of statistics.  There should be
-newly created files in `/dev/shm/mempool` that contain the dynamic data the
+newly created files in `/dev/shm/mempool-btc` that contain the dynamic data the
 webserver should serve.  If everything looks fine add the following crontab 
 entry (using `crontab -e`):
 
@@ -58,8 +58,8 @@ entry (using `crontab -e`):
 
 Install a web server of your choice.  For refreshing/zooming you need
 php and php-mysql.  Then link/copy the web subdirectory to the web
-root.  Finally link to the dynamic js files in `/dev/shm/mempool`.
+root.  Finally link to the dynamic js files in `/dev/shm/mempool-btc`.
 
     cd $HOME/mempool/web/queue
     sudo ln -s $HOME/mempool/web/* /var/www/html
-    ln -s /dev/shm/mempool/*.js $HOME/mempool/web/queue/
+    ln -s /dev/shm/mempool-btc/*.js $HOME/mempool/web/queue/

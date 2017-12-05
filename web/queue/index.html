@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Johoe's Mempool Size Statistics</title>
+    <title>Johoe's Bitcoin Mempool Size Statistics</title>
     <script type="text/javascript" src="../flot/jquery.min.js"></script>
     <script type="text/javascript" src="../flot/jquery.flot.min.js"></script>
     <script type="text/javascript" src="../flot/jquery.flot.time.min.js"></script>
@@ -9,18 +9,18 @@
     <script type="text/javascript" src="../flot/jquery.flot.resize.min.js"></script>
     <script type="text/javascript" src="../flot/jquery.flot.selection.min.js"></script>
     <script type="text/javascript" src="../flot/jquery.flot.navigate.min.js"></script>
-    <script type="text/javascript" src="mempool.js?v=1.12"></script>
+    <script type="text/javascript" src="mempool.js?v=1.13.1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="Content-Language" content="en"/>
     <meta name="author" content="Jochen Hoenicke"/>
     <meta name="keywords" content="Jochen Hoenicke, Bitcoin, Mempool, Statistics"/>
-    <meta name="description" content="Johoe's Mempool Size Statistics"/>
+    <meta name="description" content="Johoe's Bitcoin Mempool Size Statistics"/>
     <link href="style.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
   <div id="periods" class="header">
-        <b>Johoe's Mempool Statistics</b> &ndash; Period: 
+        <b>Johoe's Bitcoin Mempool Statistics</b> &ndash; Period:
     </div>
         <div id="chartContainer1" style="width: 100%; height: 600px; margin-top: 15px;"></div>
         <div id="chartContainer3" style="width: 100%; height: 600px; margin-top: 15px;"></div>
@@ -34,22 +34,25 @@
       This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per byte.  The data is generated from my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
       The idea is based on the retired service bitcoinqueue.com.
     </p>
-    <p>The data is separated into different fee levels given in satoshi per bytes.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1000 kB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
+    <p>The data is separated into different fee levels given in satoshi per bytes.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1 MB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
 
-    <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.  You can also click in the legend to toggle the visibility of the total fee statistics.</p>
+    <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
 
-    <p>Note that sizes include the segwit discount.  So for the core chain, a block will always take at most 1 MB from the mempool, even if it is bigger than 1 MB, because the lower diagram already shows the size minus three quarter of the witness size.  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
+    <p>Note that sizes include the segwit discount.  So for the core chain, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size minus three quarter of the witness size.  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
    </div>
 
     <div class="centered">
-      <p><span class="cover pixelated" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAApElEQVQI12PABfgfr9rfwMCh9mFBAwP3CoN1QHJdBZi0BZIc2mVAcf5XQDVApc1A9dyP6vYxMHBeOBjZwMCz98cxBgZ20S5VBgZGFcsmBgZmb245oK5EsTQGBo6Di3wYGFgM93Q3MPD6r/oNFDcxOQIU71+9F8j+ZPmbAcg51g80/1H4KiBTn7ETaO/anv8g2+O6QWyjaKC4suZOBqAb9vvh9AQAHus19/nAmMMAAAAASUVORK5CYII=); display: inline-block;"></span><br/>
-        Donation Bitcoin:
-        <a href="bitcoin:1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ">1FBjCXcLroP93uEZ4BfKi6Z6rw2PwvnAUJ</a><br/>
-	Litecoin: MCQXbDS5bPsycpg2LTVPQPLrB9NjoF4VJd (36CPHL27eH2YpKQ8EaW3ak6SrSnHqahkxz)<br/>
-	Ethereum: <span class="cover pixelated" style="width: 20px;height:20px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;"></span>&nbsp;mempool.hoenicke.eth</p>
+      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvZ9c84/YFCYX8qhwKC3YKH3Aga9nnurgeT+/NMLGBRWfNVQYLBftWr9AwYG5soFDAxCG122NTAoiTg4MDAIXzC64sCgYVMZ4MDAfOr1ewcG7jRTFwcGi69TTh9g0KuJz1FgEPtYOesBg25mLesCBoujv7wdGIwz9FkYGPhW2Pc5MJiKfos9wMDRtdnpAAOnYbSVAoPFPfX9QKPVZJIaGOwnKmsdYFDo+rvIgUFvl9k+oAubJLWBJjcuWtTAoLDz8ASg+7vffVNA9hAAKhdEcnLvcTYAAAAASUVORK5CYII=);"></span><img class="qrlogo" src="bc-logo-32x32.png"/></div>
+      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvYTMvsfMChsuHZCgUGv6/7qBQx6+xSygeSe00BSodsKKG6/atX6BwwMKt8cGBjEF/NJOzAwemu0MTCwPIzNd2Aw95l0ZgED6zbpiQ8YFEOPuiswcJ06qOzAYM+d+3cBA9Mds5MLGHiNT9YqMOj8EytKYOBg2xm1gEH7y/T6BgYTg0k3GBhU9xf6LWDQYRTkfsBgtivU7gADg57QogUM9tOfr3JgUFi/SgkosDS9PoFBb/cinQMMejN3PwG6ea2jJtCWvpftB5A9BAB0VkYyusTI4gAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="bch-logo-30.png"/></div>
+      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvb7a/sfMCjsy16hwKA3pTV7AYNejzaInKvMvYBBYbpqhwKD/apV6x8wMMgcc2BgEPir/iGBQYDl6rEEBraHExkPMIjbWzk3MGjMvF7lwGAlJRG7gEFludWuAwyceTnuCxiMWv3bHjAIWXfVHmCQvbTs5gIGdT6Z/AcMvHM6DzEw2HjfEWtg0H2k1HmAQS1sU+cDBrM5Mf+A1qifWtzAYL9l5uoDDAqNTMlA90x8vs+BQW/al09Ad7bul05gUNjyLQyoppOr1gHZQwBzTUeVN9V6gwAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="ltc-32px.png"/></div>
+        <p>Donation
+	bitcoin:<a href="bitcoin:3LrXizKejCGYyGUxYzGweyuxFVtfs3odEe">3LrXizKejCGYyGUxYzGweyuxFVtfs3odEe</a> (Segwit)<br/>
+        <a href="bitcoincash:qqc0a3s49uzj329rju4v27erlc6kx5paqs6t5l70n6">bitcoincash:qqc0a3s49uzj329rju4v27erlc6kx5paqs6t5l70n6</a><br/>
+	litecoin:<a href="litecoin:MK7jfGG48RTsETCXTAz1wP27uVoFhBUV5o">MK7jfGG48RTsETCXTAz1wP27uVoFhBUV5o</a><br/>
+	ethereum: <span class="cover pixelated" style="width: 20px;height:20px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;"></span>&nbsp;mempool.hoenicke.eth</p>
     </div>
     <div class="centered" style="font-size: 13px; margin: 20px;">
 	Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br/>
-        © 2016-2017 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
+        © 2016-2018 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
     </div>
 </html>

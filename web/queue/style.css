@@ -70,3 +70,17 @@ div.button {
     background-size: cover;
     background-repeat: no-repeat;
 }
+.qrcontainer {
+    display: inline-block;
+    position: relative;
+    margin: 1ex 3em;
+}
+.qrcode {
+    display: inline-block;
+}
+.qrlogo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}

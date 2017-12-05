@@ -1,4 +1,4 @@
-/* 
+/*
     Bitcoin Mempool Visualization
     Copyright (C) 2017  Jochen Hoenicke
 
@@ -17,18 +17,17 @@
 */
 
 var charts;
-var ranges = [ 0, 1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1400, 2000, 3000, 5000, 7000, 10000 ];
-var show = [ 0, 1, 2, 3, 4, 5, 6, 8, 10, 13, 15, 18, 23, 27, 31, 37];
+var ranges = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ];
+var show = [ 0, 1, 2, 5, 9, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37 ];
 var reloader;
 var reloadInterval = 0;
 var reloading;
-var colors = [ "#535154", "#001080",
-               "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
-	       "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
-	       "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
-	       "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
-	       "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed", 
-               "#001080"];
+var colors = [ "#535154", "#001080", "#349dac", "#a21010", "#7e5e82",
+               "#84b200", "#a0d0cd", "#c7b52e", "#6cbbea", "#514f4c",
+               "#4e7fbb", "#9f63a0", "#f69445", "#349dac", "#c7b52e",
+               "#c14540", "#7e2e82", "#514f4c", "#54b200", "#1e7fbb",
+               "#f67405", "#60e0cd", "#e12000", "#123456", "#fe3dba",
+               "#349d00", "#bd00ed", "#001080"];
 var units = [ "tx", "MB", "BTC" ];
 var precisions = [ 0, 3, 3];
 var feelevel = 0;
@@ -89,7 +88,7 @@ function tooltip(dataidx, event, pos, item) {
 		rowcolor = ' style="background-color: ' + colors[i] + '"';
 		highlight = ' class="highlight"';
 	    }
-	    str = str + "<tr" + rowcolor + "><td" + highlight + ">" + (value == 0 ? "total" : value + "+") + 
+	    str = str + "<tr" + rowcolor + "><td" + highlight + ">" + (value == 0 ? "total" : value + "+") +
 		":&nbsp;</td><td" + highlight + ">" + sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;"+unit+"</td></tr>";
 	}
 	str = str + "</table>";
@@ -148,9 +147,7 @@ function drawTitle(plot, cvs, title) {
 }
 
 function addData(raw, dataidx, unit) {
-    var feeidx = show.length;
     for (i = 0; i < raw.length; i++) {
-      if (raw[i][dataidx+1][0] > 0) {
 	for (j = 0; j < show.length; j++) {
 	    function get(array, index) {
 		if (index >= array.length)
@@ -158,13 +155,12 @@ function addData(raw, dataidx, unit) {
 		else
 		    return array[index];
 	    }
-	    var amount = get(raw[i][dataidx+1],show[j]) - (j == show.length-1 ? 0 : get(raw[i][dataidx+1],show[j+1]));
+	    var amount = 0;
+	    for (k = show[j]; k < (j == show.length ? ranges.length : show[j + 1]); k++) {
+		amount = amount + get(raw[i][dataidx+1],k);
+	    }
 	    data[dataidx][j].push([raw[i][0]*1000, amount/unit]);
 	}
-      }
-      if (raw[i][3] > 0) {
-	data[dataidx][feeidx].push([raw[i][0]*1000, raw[i][3]/1e8]);
-      }
     }
     return data[dataidx];
 }
@@ -196,7 +192,7 @@ function convertData(raw, dataidx, unit) {
     var theData = storeData(raw, dataidx, unit);
     for (j = 0; j < show.length; j++) {
 	var name = ranges[show[j]];
-	var legend = 
+	var legend =
 	    j == show.length-1 ? (name+"+ sat/B") :
 	    name+"-"+ranges[show[j+1]];
 	var color = colors[j];
@@ -306,7 +302,7 @@ function loadData(rawdata) {
     }
 }
 
-var periods = ["2h", "8h", "24h", "2d", "4d", "1w", "2w", "30d", "3m", "all"];
+var periods = ["2h", "8h", "24h", "2d", "4d", "1w", "2w", "30d", "3m", "6m", "1y", "all"];
 function selectbutton(timespan) {
     for (i = 0; i < periods.length; i++) {
 	if (periods[i] == timespan) {
