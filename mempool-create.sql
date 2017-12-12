@@ -123,7 +123,7 @@ CREATE TABLE mempool (
     fee32 BIGINT,
     fee33 BIGINT,
     fee34 BIGINT,
-    fee35 BIGINT
+    fee35 BIGINT,
     fee36 BIGINT,
     fee37 BIGINT,
     fee38 BIGINT,
@@ -131,5 +131,5 @@ CREATE TABLE mempool (
     fee40 BIGINT,
     fee41 BIGINT,
     fee42 BIGINT,
-    fee43 BIGINT,
+    fee43 BIGINT
 );
