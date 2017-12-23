@@ -22,7 +22,7 @@ bitcoin-cli.  Add a bitcoin.conf with rpcuser/rpcpassword settings to
 `/home/mempool/.bitcoin`, to be able to use bitcoin-cli.  You can test your
 setup by running
 
-    bitcoin-cli getinfo
+    bitcoin-cli getmempoolinfo
 
 Install `mysql` and create a database. Then you can test your
 configuration by running mempool.sh.  If you don't want to use mysql,
