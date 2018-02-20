@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
     <title>Johoe's Bitcoin Mempool Size Statistics</title>
-    <script type="text/javascript" src="../flot/jquery.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.time.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.stack.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.resize.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.selection.min.js"></script>
-    <script type="text/javascript" src="../flot/jquery.flot.navigate.min.js"></script>
-    <script type="text/javascript" src="mempool.js?v=2.0"></script>
+    <script src="../flot/jquery.min.js"></script>
+    <script src="../flot/jquery.flot.min.js"></script>
+    <script src="../flot/jquery.flot.time.min.js"></script>
+    <script src="../flot/jquery.flot.stack.min.js"></script>
+    <script src="../flot/jquery.flot.resize.min.js"></script>
+    <script src="../flot/jquery.flot.selection.min.js"></script>
+    <script src="../flot/jquery.flot.navigate.min.js"></script>
+    <script src="mempool.js?v=2.0"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="Content-Language" content="en"/>
@@ -28,7 +28,7 @@
   <div id="chartContainer3" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="chartContainer2" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="tooltip"></div>
-  <script type="text/javascript">
+  <script>
      main();
   </script>
   <div>
@@ -44,9 +44,9 @@
    </div>
 
     <div class="centered">
-      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvZ9c84/YFCYX8qhwKC3YKH3Aga9nnurgeT+/NMLGBRWfNVQYLBftWr9AwYG5soFDAxCG122NTAoiTg4MDAIXzC64sCgYVMZ4MDAfOr1ewcG7jRTFwcGi69TTh9g0KuJz1FgEPtYOesBg25mLesCBoujv7wdGIwz9FkYGPhW2Pc5MJiKfos9wMDRtdnpAAOnYbSVAoPFPfX9QKPVZJIaGOwnKmsdYFDo+rvIgUFvl9k+oAubJLWBJjcuWtTAoLDz8ASg+7vffVNA9hAAKhdEcnLvcTYAAAAASUVORK5CYII=);"></span><img class="qrlogo" src="bc-logo-32x32.png"/></div>
-      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvYTMvsfMChsuHZCgUGv6/7qBQx6+xSygeSe00BSodsKKG6/atX6BwwMKt8cGBjEF/NJOzAwemu0MTCwPIzNd2Aw95l0ZgED6zbpiQ8YFEOPuiswcJ06qOzAYM+d+3cBA9Mds5MLGHiNT9YqMOj8EytKYOBg2xm1gEH7y/T6BgYTg0k3GBhU9xf6LWDQYRTkfsBgtivU7gADg57QogUM9tOfr3JgUFi/SgkosDS9PoFBb/cinQMMejN3PwG6ea2jJtCWvpftB5A9BAB0VkYyusTI4gAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="bch-logo-30.png"/></div>
-      <div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvb7a/sfMCjsy16hwKA3pTV7AYNejzaInKvMvYBBYbpqhwKD/apV6x8wMMgcc2BgEPir/iGBQYDl6rEEBraHExkPMIjbWzk3MGjMvF7lwGAlJRG7gEFludWuAwyceTnuCxiMWv3bHjAIWXfVHmCQvbTs5gIGdT6Z/AcMvHM6DzEw2HjfEWtg0H2k1HmAQS1sU+cDBrM5Mf+A1qifWtzAYL9l5uoDDAqNTMlA90x8vs+BQW/al09Ad7bul05gUNjyLQyoppOr1gHZQwBzTUeVN9V6gwAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="ltc-32px.png"/></div>
+        <a href="bitcoin:3LrXizKejCGYyGUxYzGweyuxFVtfs3odEe"><div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvZ9c84/YFCYX8qhwKC3YKH3Aga9nnurgeT+/NMLGBRWfNVQYLBftWr9AwYG5soFDAxCG122NTAoiTg4MDAIXzC64sCgYVMZ4MDAfOr1ewcG7jRTFwcGi69TTh9g0KuJz1FgEPtYOesBg25mLesCBoujv7wdGIwz9FkYGPhW2Pc5MJiKfos9wMDRtdnpAAOnYbSVAoPFPfX9QKPVZJIaGOwnKmsdYFDo+rvIgUFvl9k+oAubJLWBJjcuWtTAoLDz8ASg+7vffVNA9hAAKhdEcnLvcTYAAAAASUVORK5CYII=);"></span><img class="qrlogo" src="bc-logo-32x32.png" alt=""/></div></a>
+        <a href="bitcoincash:qqc0a3s49uzj329rju4v27erlc6kx5paqs6t5l70n6"><div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvYTMvsfMChsuHZCgUGv6/7qBQx6+xSygeSe00BSodsKKG6/atX6BwwMKt8cGBjEF/NJOzAwemu0MTCwPIzNd2Aw95l0ZgED6zbpiQ8YFEOPuiswcJ06qOzAYM+d+3cBA9Mds5MLGHiNT9YqMOj8EytKYOBg2xm1gEH7y/T6BgYTg0k3GBhU9xf6LWDQYRTkfsBgtivU7gADg57QogUM9tOfr3JgUFi/SgkosDS9PoFBb/cinQMMejN3PwG6ea2jJtCWvpftB5A9BAB0VkYyusTI4gAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="bch-logo-30.png" alt=""/></div></a>
+        <a href="litecoin:MK7jfGG48RTsETCXTAz1wP27uVoFhBUV5o"><div class="qrcontainer"><span class="cover pixelated qrcode" style="width:148px; height:148px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvb7a/sfMCjsy16hwKA3pTV7AYNejzaInKvMvYBBYbpqhwKD/apV6x8wMMgcc2BgEPir/iGBQYDl6rEEBraHExkPMIjbWzk3MGjMvF7lwGAlJRG7gEFludWuAwyceTnuCxiMWv3bHjAIWXfVHmCQvbTs5gIGdT6Z/AcMvHM6DzEw2HjfEWtg0H2k1HmAQS1sU+cDBrM5Mf+A1qifWtzAYL9l5uoDDAqNTMlA90x8vs+BQW/al09Ad7bul05gUNjyLQyoppOr1gHZQwBzTUeVN9V6gwAAAABJRU5ErkJggg==);"></span><img class="qrlogo" src="ltc-32px.png" alt=""/></div></a>
         <p>Donation
 	bitcoin:<a href="bitcoin:3LrXizKejCGYyGUxYzGweyuxFVtfs3odEe">3LrXizKejCGYyGUxYzGweyuxFVtfs3odEe</a> (Segwit)<br/>
         <a href="bitcoincash:qqc0a3s49uzj329rju4v27erlc6kx5paqs6t5l70n6">bitcoincash:qqc0a3s49uzj329rju4v27erlc6kx5paqs6t5l70n6</a><br/>
