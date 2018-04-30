@@ -497,7 +497,7 @@ function main() {
         })();
         btn.className = "lnk";
         btn.id = "cfg"+i;
-        divconfig.append(btn);
+        divconfig.appendChild(btn);
     }
     var div = document.getElementById("periods");
     var onclickfun = function(e) { button(e.target.text); };
@@ -509,7 +509,7 @@ function main() {
         btn.onclick = onclickfun;
         btn.className = "lnk";
         btn.id = "lk"+name;
-        div.append(btn);
+        div.appendChild(btn);
     }
     setconfig(hashconfig);
     button(hashtimespan);
