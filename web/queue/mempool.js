@@ -22,6 +22,7 @@ var config = [
      "url":"https://dedi.jochen-hoenicke.de/queue/",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
+     "feelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 5, 9, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37 ],
      "colors": [ "#535154", "#001080", "#349dac", "#a21010", "#7e5e82",
@@ -35,10 +36,11 @@ var config = [
      "url":"https://dedi.jochen-hoenicke.de/queue/",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
+     "feelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
      "colors": [
-   "#000080", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
+   "#535154", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
    "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
    "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
@@ -50,6 +52,7 @@ var config = [
      "url":"https://core.jochen-hoenicke.de/queue/",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
+     "feelevel": 0,
      "ranges": [ 0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 35 ],
      "colors": [ "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
@@ -60,22 +63,24 @@ var config = [
                  "#001080", "#ffff00", "#20c020", "#0000c0" ],
      "inc": false},
     {"name":"BCH",
-     "url":"https://jochen-hoenicke.de/queue/cash/",
+     "url":"https://dedi.jochen-hoenicke.de/queue/cash/",
      "symbol":"BCH",
      "satPerUnit": 100000000.0,
-     "ranges": [ 0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26,27 ],
-     "colors": [ "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
+     "feelevel": 1,
+     "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 27, 28, 29 ],
+     "colors": [ "#535154", "#001080", "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
                "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
                "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
                "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
                "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
                "#001080"],
-     "inc": false},
+     "inc": true},
     {"name":"LTC",
      "url":"https://dedi.jochen-hoenicke.de/queue/litecoin/",
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
+     "feelevel": 0,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30,40, 50, 60, 70, 80,100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 2000, 3000, 5000, 7000, 10000 ],
      "show":   [ 0, 21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],
      "colors": [ "#535154", "#001080", /*"#349d00",*/ "#349dac",
@@ -391,10 +396,12 @@ function zoomData(rawdata) {
 var oldconfig;
 function loadData(rawdata) {
     if (!charts) {
+        feelevel = config[currconfig].feelevel;
         showMempool(rawdata);
         oldconfig = currconfig;
     } else {
         if (currconfig != oldconfig) {
+            feelevel = config[currconfig].feelevel;
             for (var i = 0; i < 3; i++) {
                 charts[i].setData(convertData(rawdata, i, scale(i)));
             }
@@ -490,7 +497,6 @@ function main() {
         var name = config[i].name;
         var btn = document.createElement("a");
         btn.text = name;
-        btn.href = "#";
         (function() {
             var cfg = i;
             btn.onclick = function(e) { setconfig(cfg); button(currtimespan); }
@@ -505,7 +511,6 @@ function main() {
         var name = periods[i];
         var btn = document.createElement("a");
         btn.text = name;
-        btn.href = "#";
         btn.onclick = onclickfun;
         btn.className = "lnk";
         btn.id = "lk"+name;

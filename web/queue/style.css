@@ -15,6 +15,7 @@ a {
     padding-bottom: 1px;
     padding-left: 3px;
     padding-right: 3px;
+    cursor: pointer;
 }
 .selected {
     color: #000;
@@ -71,6 +72,11 @@ div.button {
     background-size: cover;
     background-repeat: no-repeat;
 }
+.donation {
+    display: inline-block;
+    position: relative;
+    margin: 1ex 1em;
+}
 .qrcontainer {
     display: inline-block;
     position: relative;
@@ -84,4 +90,8 @@ div.button {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.bolt {
+    margin-bottom: 2ex;
 }

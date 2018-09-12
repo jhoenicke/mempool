@@ -1,0 +1,68 @@
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 13px;
+}
+
+/* Style the tab */
+.tab {
+    max-width: 500px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    max-width: 500px;
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+.lnqrcode {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px 0px;
+    width: 256px;
+    height: 256px;
+}
+
+.lntext {
+    width: 100%;
+    border: none;
+    text-overflow: ellipsis;
+}
+
+.lnsettled {
+    display: none;
+    position: absolute;
+    text-align: center;
+    top: 200px;
+    left: 150px;
+    color: green;
+    font-size: 300%;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}

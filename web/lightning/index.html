@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <title>Johoe's Lightning Donation Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link href="style.css" rel="stylesheet" type="text/css"/>
+  <script src="qrcode.min.js"></script>
+</head>
+<body onload="loadDoc()">
+<div class="tab">
+  <button class="tablinks" onclick="selectTab(event, 'channel')">Open Channel</button>
+  <button id="defaulttab" class="tablinks" onclick="selectTab(event, 'invoice')">Payment Request</button>
+</div>
+<div id="channel" class="tabcontent" onclick="copyclipboard('textnode')">
+   <p>Scan this QRCode to open a channel to my node. Click to copy to clipboard.</p>
+   <div id="qrnode" class="lnqrcode"></div>
+   <textarea id="textnode" class="lntext" rows="2"></textarea>
+</div>
+<div id="invoice" class="tabcontent">
+   <p>Scan or click this QRCode to start a payment.</p>
+   <div id="qrpayed" class="lnsettled">PAID<br/>Thank You</div>
+   <a id="qrlink" href="#"><div id="qrinvoice" class="lnqrcode"></div></a>
+   <textarea id="textinvoice" rows="5" class="lntext"></textarea>
+   <input type="button" value="Copy to Clipboard" 
+    onclick="copyclipboard('textinvoice')"/>
+</div>
+<script>
+  var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@37.221.198.57:9735";
+  new QRCode(document.getElementById("qrnode"), { "text": uri, "correctLevel": QRCode.CorrectLevel.L });
+  document.getElementById("textnode").value = uri;
+
+  function waitfor(rhash) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4) {
+         if (this.status == 200) {
+            var response = JSON.parse(this.responseText);
+            if (!response.settled) { 
+               waitfor(rhash);
+            } else {
+	       document.getElementById("qrinvoice").style.opacity = 0.2;
+	       document.getElementById("qrpayed").style.display = "block";
+	    }
+         } else if (this.status != 0) {
+            alert("Cannot check payment status: "+ this.status + " state: "+this.readyState+"text: "+this.responseText);
+         }
+      }
+    }
+    xhttp.open("POST", "/lnd/check-invoice.py?r_hash="+rhash, true);
+    xhttp.send();
+  }
+
+  function loadDoc() {
+    var xhttp = new XMLHttpRequest();
+    function handleInvoice(invoice) {
+       rhash = invoice.r_hash;
+       paymentrequest = invoice.payment_request;
+       qrcode = new QRCode(document.getElementById("qrinvoice"),
+         { "text": paymentrequest,
+           "correctLevel": QRCode.CorrectLevel.L });
+       document.getElementById("qrlink").href = "lightning:" + paymentrequest;
+       document.getElementById("textinvoice").value = paymentrequest;
+       waitfor(rhash);
+    }
+
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4) {
+         if (this.status == 200) {
+            handleInvoice(JSON.parse(this.responseText));
+         } else {
+            document.getElementById("textinvoice").value = "Failed to get payment request";
+         }
+      }
+    }
+    xhttp.open("POST", "/lnd/invoice-mp.py", true);
+    xhttp.send();
+  }
+	 
+  function selectTab(evt, name) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(name).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+
+  function copyclipboard(id) {
+    var copyText = document.getElementById(id);
+    copyText.select();
+    document.execCommand("copy");
+  }
+  document.getElementById("defaulttab").click();
+</script>
+  <div class="centered" style="font-size: 13px; margin: 20px;">
+	Source code on github: <a href="https://github.com/jhoenicke/mempool/tree/master/web/lightning/" target="_blank">https://github.com/jhoenicke/mempool</a><br/>
+        © 2018 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
+  </div>
+</body>
+</html>
