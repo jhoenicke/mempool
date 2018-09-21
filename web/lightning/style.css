@@ -5,7 +5,7 @@ body {
 
 /* Style the tab */
 .tab {
-    max-width: 500px;
+    max-width: 524px;
     overflow: hidden;
     border: 1px solid #ccc;
     background-color: #f1f1f1;
@@ -41,12 +41,14 @@ body {
     border-top: none;
 }
 
+.lncontainer {
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
+
 .lnqrcode {
-    margin-left: auto;
-    margin-right: auto;
-    padding: 20px 0px;
-    width: 256px;
-    height: 256px;
+    display: inline;
 }
 
 .lntext {
@@ -58,9 +60,9 @@ body {
 .lnsettled {
     display: none;
     position: absolute;
-    text-align: center;
-    top: 200px;
-    left: 150px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     color: green;
     font-size: 300%;
     font-family: Arial, sans-serif;

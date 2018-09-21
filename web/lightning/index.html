@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link href="style.css" rel="stylesheet" type="text/css"/>
-  <script src="qrcode.min.js"></script>
+  <script src="qrcodegen.min.js"></script>
 </head>
 <body onload="loadDoc()">
 <div class="tab">
@@ -14,20 +14,25 @@
 </div>
 <div id="channel" class="tabcontent" onclick="copyclipboard('textnode')">
    <p>Scan this QRCode to open a channel to my node. Click to copy to clipboard.</p>
-   <div id="qrnode" class="lnqrcode"></div>
+   <div class="lncontainer"><canvas id="qrnode" class="lnqrcode"></canvas></div>
    <textarea id="textnode" class="lntext" rows="2"></textarea>
 </div>
 <div id="invoice" class="tabcontent">
    <p>Scan or click this QRCode to start a payment.</p>
-   <div id="qrpayed" class="lnsettled">PAID<br/>Thank You</div>
-   <a id="qrlink" href="#"><div id="qrinvoice" class="lnqrcode"></div></a>
+   <div class="lncontainer">
+     <a id="qrlink" href="#"><canvas id="qrinvoice" class="lnqrcode"></canvas></a>
+     <div id="qrpayed" class="lnsettled">PAID<br/>Thank You</div>
+   </div>
    <textarea id="textinvoice" rows="5" class="lntext"></textarea>
-   <input type="button" value="Copy to Clipboard" 
+   <input type="button" value="Copy to Clipboard"
     onclick="copyclipboard('textinvoice')"/>
 </div>
 <script>
+  var border = 4;
+  var scale = 4;
   var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@37.221.198.57:9735";
-  new QRCode(document.getElementById("qrnode"), { "text": uri, "correctLevel": QRCode.CorrectLevel.L });
+  var qruri = qrcodegen.QrCode.encodeText(uri.toUpperCase(), qrcodegen.QrCode.Ecc.MEDIUM);
+  qruri.drawCanvas(scale, border, document.getElementById("qrnode"));
   document.getElementById("textnode").value = uri;
 
   function waitfor(rhash) {
@@ -56,9 +61,8 @@
     function handleInvoice(invoice) {
        rhash = invoice.r_hash;
        paymentrequest = invoice.payment_request;
-       qrcode = new QRCode(document.getElementById("qrinvoice"),
-         { "text": paymentrequest,
-           "correctLevel": QRCode.CorrectLevel.L });
+       var qrcode = qrcodegen.QrCode.encodeText(paymentrequest.toUpperCase(), qrcodegen.QrCode.Ecc.LOW);
+       qrcode.drawCanvas(scale, border, document.getElementById("qrinvoice"));
        document.getElementById("qrlink").href = "lightning:" + paymentrequest;
        document.getElementById("textinvoice").value = paymentrequest;
        waitfor(rhash);
