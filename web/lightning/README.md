@@ -12,7 +12,7 @@ in your httpd cgi configuration.  I use lighttpd with:
 
 ```
 $HTTP["url"] =~ "^/lnd/" {
-	cgi.assign = ( ".py" => "/home/lnd/lnd/bin/python" )
+    cgi.assign = ( ".py" => "/home/lnd/lnd/bin/python" )
 }
 ```
 

@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-$dbtype	= "mysql";
+$dbtype = "mysql";
 $dbdatabase = "dbname=btc_mempool;host=localhost";
 $dbdsn = "$dbtype:$dbdatabase";
 $dbuser = "www";
@@ -49,16 +49,16 @@ try {
     echo 'call([';
     $comma="";
     while ($row = $query->fetch(PDO::FETCH_NUM)) {
-	for ($i = 0; $i < 3*$feelevels+1; $i++) {
-	    if (!isset($row[$i])) {
+        for ($i = 0; $i < 3*$feelevels+1; $i++) {
+            if (!isset($row[$i])) {
                 $row[$i] = 0;
             }
-	}
-    	echo $comma.'['.$row[0].',['.
-	     join(',', array_slice($row, 1, $feelevels)).'],['.
-	     join(',', array_slice($row, 1 + $feelevels, $feelevels)).'],['.
-	     join(',', array_slice($row, 1 + 2*$feelevels, $feelevels)).']]';
-	$comma = ",\n";
+        }
+        echo $comma.'['.$row[0].',['.
+             join(',', array_slice($row, 1, $feelevels)).'],['.
+             join(',', array_slice($row, 1 + $feelevels, $feelevels)).'],['.
+             join(',', array_slice($row, 1 + 2*$feelevels, $feelevels)).']]';
+        $comma = ",\n";
     }
     echo "]);\n";
     exit;

@@ -27,23 +27,23 @@ while(<>) {
     /"descendantfees": (\d+)/ and $dfees = $1;
 
     if (/},/) {
-	$afpb = $afees / $asize; # ancestor fee (includes current)
-	$fpb = $fee / $size;     # current fee
-	$dfpb = $dfees / $dsize; # descendant fee (includes current)
-	# total average fee for mining all ancestors and descendants.
-	$tfpb = ($afees + $dfees - $fee) / ($asize + $dsize - $size);
-	# the "min"s ensure we take the fee level of ancestors in account
-	# if and only if they pay less (like a miner would do).
-	# the "max" ensures we take the descendants into account for CPFP.
-	$feeperbyte = max(min($dfpb, $tfpb), min($fpb, $afpb));
-	for ($i = 0; $i< @feelimit-1; $i++) {
-	    if ($feeperbyte >= $feelimit[$i] && $feeperbyte < $feelimit[$i+1]) {
-		$total[$i] += $size;
-		$count[$i]++;
-		$fees[$i] += $fee;
-	    }
-	}
-	$found = 1;
+        $afpb = $afees / $asize; # ancestor fee (includes current)
+        $fpb = $fee / $size;     # current fee
+        $dfpb = $dfees / $dsize; # descendant fee (includes current)
+        # total average fee for mining all ancestors and descendants.
+        $tfpb = ($afees + $dfees - $fee) / ($asize + $dsize - $size);
+        # the "min"s ensure we take the fee level of ancestors in account
+        # if and only if they pay less (like a miner would do).
+        # the "max" ensures we take the descendants into account for CPFP.
+        $feeperbyte = max(min($dfpb, $tfpb), min($fpb, $afpb));
+        for ($i = 0; $i< @feelimit-1; $i++) {
+            if ($feeperbyte >= $feelimit[$i] && $feeperbyte < $feelimit[$i+1]) {
+                $total[$i] += $size;
+                $count[$i]++;
+                $fees[$i] += $fee;
+            }
+        }
+        $found = 1;
     }
 }
 if ($found) {

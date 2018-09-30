@@ -77,9 +77,9 @@
             if (!response.settled) { 
                waitfor(rhash);
             } else {
-	       document.getElementById("qrinvoice").style.opacity = 0.2;
-	       document.getElementById("qrpayed").style.display = "block";
-	    }
+               document.getElementById("qrinvoice").style.opacity = 0.2;
+               document.getElementById("qrpayed").style.display = "block";
+            }
          } else if (this.status != 0) {
             alert("Cannot check payment status: "+ this.status + " state: "+this.readyState+"text: "+this.responseText);
          }
@@ -126,7 +126,7 @@
   function loadDoc() {
     requestInvoice(0, "Donation to Johoe's mempool");
   }
-	 
+
   function selectTab(button, name) {
     // Declare all variables
     var i, tabcontent, tablinks;
@@ -156,8 +156,8 @@
   document.getElementById("defaulttab").click();
 </script>
   <div class="centered" style="font-size: 13px; margin: 20px;">
-	Source code on github: <a href="https://github.com/jhoenicke/mempool/tree/master/web/lightning/" target="_blank">https://github.com/jhoenicke/mempool</a><br/>
-        © 2018 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
+     Source code on github: <a href="https://github.com/jhoenicke/mempool/tree/master/web/lightning/" target="_blank">https://github.com/jhoenicke/mempool</a><br/>
+     © 2018 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
   </div>
 </body>
 </html>

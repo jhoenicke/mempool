@@ -6,18 +6,18 @@ use Data::Dumper;
 my $port = 8332;
 
 if (open COOKIE, "<$ENV{HOME}/.bitcoin/.cookie") {
-	$_=<COOKIE>;
-	($user,$pwd) = split ":", $_;
-	close COOKIE;
+    $_=<COOKIE>;
+    ($user,$pwd) = split ":", $_;
+    close COOKIE;
 } elsif (open CONFIG, "<$ENV{HOME}/.bitcoin/bitcoin.conf") {
-	while (<CONFIG>) {
-	    /rpcuser=(.*)/ and $user = $1;
-	    /rpcpassword=(.*)/ and $pwd = $1;
-	}
-	close CONFIG;
+    while (<CONFIG>) {
+        /rpcuser=(.*)/ and $user = $1;
+        /rpcpassword=(.*)/ and $pwd = $1;
+    }
+    close CONFIG;
 } else {
-	print "Cannot find credentials!";
-	exit;
+    print "Cannot find credentials!";
+    exit;
 }
 
 my $client = new JSON::RPC::Legacy::Client;
@@ -33,7 +33,7 @@ while(<>) {
    });
    if ($res) {
       if ($res->is_error) {
-	  print "Tx: $_ \n";
+          print "Tx: $_ \n";
           print "Error: ", Dumper($res->error_message);
       }
    } else {
