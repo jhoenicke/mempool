@@ -39,8 +39,8 @@ javascript.  I use XMLHttpRequest with `POST` as method, mainly to avoid that
 intermediate components cache the result.  The result is sent as JSON, so
 JSON.parse can be used to parse it.
 
-The file `qrcode.min.js` that generates QR-codes is from [davidshimjs][2].
-It is under the MIT license.
+The file `qrcodegen.min.js` that generates QR-codes is from 
+[Project Nayuki][2].  It is under the MIT license.
 
 [1]: https://github.com/lightningnetwork/lnd/blob/master/docs/grpc/python.md
-[2]: https://github.com/davidshimjs/qrcodejs
+[2]: https://www.nayuki.io/page/qr-code-generator-library
