@@ -9,8 +9,9 @@
 </head>
 <body onload="loadDoc()">
 <div class="tab">
-  <button class="tablinks" onclick="selectTab(event, 'channel')">Open Channel</button>
-  <button id="defaulttab" class="tablinks" onclick="selectTab(event, 'invoice')">Payment Request</button>
+  <button class="tablinks" onclick="selectTab(event.currentTarget, 'channel')">Open Channel</button>
+  <button id="btninvoice" class="tablinks" onclick="selectTab(event.currentTarget, 'invoice')">Payment Request</button>
+  <button id="defaulttab" class="tablinks" onclick="selectTab(event.currentTarget, 'setamount')">Set Amount</button>
 </div>
 <div id="channel" class="tabcontent" onclick="copyclipboard('textnode')">
    <p>Scan this QRCode to open a channel to my node. Click to copy to clipboard.</p>
@@ -27,17 +28,49 @@
    <input type="button" value="Copy to Clipboard"
     onclick="copyclipboard('textinvoice')"/>
 </div>
+<div id="setamount" class="tabcontent">
+   Donate <input type="button" value="&cent;&cent; (two cents)" onclick="setvalue(3)" />
+   <input type="button" value="☕ (coffee)" onclick="setvalue(300)" />
+   <input type="button" value="🍺 (beer)" onclick="setvalue(800)" />
+   <input type="button" value="🍕 (pizza)" onclick="setvalue(2000)" /><br/>
+   <p>or amount in bits (microbitcoin): <input type="number" id="value" value="" /></p>
+   <p>Memo: <input type="text" id="memo" value="Donation for Johoe's mempool" /></p>
+   <input type="button" value="Get invoice" onclick="invoice()" />
+</div>
 <script>
   var border = 4;
   var scale = 4;
   var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@37.221.198.57:9735";
-  var qruri = qrcodegen.QrCode.encodeText(uri.toUpperCase(), qrcodegen.QrCode.Ecc.MEDIUM);
+  var qruri = qrcodegen.QrCode.encodeText(uri, qrcodegen.QrCode.Ecc.MEDIUM);
   qruri.drawCanvas(scale, border, document.getElementById("qrnode"));
   document.getElementById("textnode").value = uri;
+  var paymentrhash;
+
+  function setvalue(value) {
+    document.getElementById("value").value = value;
+  }
+
+  function invoice() {
+    var value = document.getElementById("value").value;
+    var memo = document.getElementById("memo").value;
+    if (value < 0) {
+      alert("Nice try :) Please enter a positive value");
+      return;
+    }
+    if (value > 42949) {
+      alert("Please keep amount to less than 40 000 bits");
+      return;
+    }
+    requestInvoice(value, memo);
+    selectTab(document.getElementById("btninvoice"), "invoice");
+  }
 
   function waitfor(rhash) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
+      if (rhash != paymentrhash) {
+         return;
+      }
       if (this.readyState == 4) {
          if (this.status == 200) {
             var response = JSON.parse(this.responseText);
@@ -56,10 +89,18 @@
     xhttp.send();
   }
 
-  function loadDoc() {
+  function requestInvoice(value, memo) {
+    document.getElementById("qrlink").href = "#";
+    document.getElementById("textinvoice").value = "";
+    var canvas = document.getElementById("qrinvoice");
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    paymentrhash = 0;
+
     var xhttp = new XMLHttpRequest();
     function handleInvoice(invoice) {
-       rhash = invoice.r_hash;
+       var rhash = invoice.r_hash;
+       paymentrhash = rhash;
        paymentrequest = invoice.payment_request;
        var qrcode = qrcodegen.QrCode.encodeText(paymentrequest.toUpperCase(), qrcodegen.QrCode.Ecc.LOW);
        qrcode.drawCanvas(scale, border, document.getElementById("qrinvoice"));
@@ -77,11 +118,16 @@
          }
       }
     }
-    xhttp.open("POST", "/lnd/invoice-mp.py", true);
+    var params = "memo="+encodeURIComponent(memo)+"&value="+~~(value*100);
+    xhttp.open("POST", "/lnd/invoice.py?"+params, true);
     xhttp.send();
   }
+
+  function loadDoc() {
+    requestInvoice(0, "Donation to Johoe's mempool");
+  }
 	 
-  function selectTab(evt, name) {
+  function selectTab(button, name) {
     // Declare all variables
     var i, tabcontent, tablinks;
 
@@ -99,7 +145,7 @@
 
     // Show the current tab, and add an "active" class to the button that opened the tab
     document.getElementById(name).style.display = "block";
-    evt.currentTarget.className += " active";
+    button.className += " active";
   }
 
   function copyclipboard(id) {
