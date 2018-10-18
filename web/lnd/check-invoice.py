@@ -1,14 +1,13 @@
-import rpc_pb2 as ln
-import rpc_pb2_grpc as lnrpc
-import grpc
 import re
 import os
 import sys
 import codecs
 import time
+import grpc
+import rpc_pb2 as ln
+import rpc_pb2_grpc as lnrpc
 
-
-def main():
+def connect():
     # Due to updated ECDSA generated tls.cert we need to let gprc know that
     # we need to use that cipher suite otherwise there will be a handshake
     # error when we communicate with the lnd rpc server.
@@ -21,7 +20,7 @@ def main():
         macaroon_bytes = f.read()
         macaroon = codecs.encode(macaroon_bytes, 'hex')
 
-    def metadata_callback(context, callback):
+    def metadata_callback(_context, callback):
         # for more info see grpc docs
         callback([('macaroon', macaroon)], None)
 
@@ -36,11 +35,14 @@ def main():
     # finally pass in the combined credentials when creating a channel
     channel = grpc.secure_channel('localhost:10009', combined_creds)
     stub = lnrpc.LightningStub(channel)
+    return stub
 
+def main():
+    stub = connect()
     uri = os.environ.get("REQUEST_URI")
     match = re.search("[?&]r_hash=([0-9a-f]+)(&.*)?$", uri)
     if not match:
-        raise("No Index")
+        raise ValueError("No Index")
     rhash = match.group(1)
     settled = False
     timeout = time.time() + 60  # 1 minute timeout
@@ -61,7 +63,7 @@ if debug:
     sys.stderr = sys.stdout
 try:
     main()
-except:
+except Exception:
     import traceback
     print("Status: 500 Internal Error")
     print("Content-Type: text/html; charset=UTF-8")

@@ -8,6 +8,6 @@ mkdir -p /dev/shm/mempool-btc
 cd $MEMPOOLHOME
 rm -f $TMPFILE
 $BITCOINCLI getrawmempool true > $TMPFILE
-perl mempool-sql.pl < $TMPFILE
+python3 mempool_sql.py < $TMPFILE
 
 ./mkdata.sh

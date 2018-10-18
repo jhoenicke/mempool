@@ -1,14 +1,15 @@
-import rpc_pb2 as ln
-import rpc_pb2_grpc as lnrpc
+#!/usr/bin/python3
+
 import cgi
-import grpc
-import re
 import os
 import sys
 import codecs
 import binascii
+import grpc
+import rpc_pb2 as ln
+import rpc_pb2_grpc as lnrpc
 
-def main():
+def connect():
     # Due to updated ECDSA generated tls.cert we need to let gprc know that
     # we need to use that cipher suite otherwise there will be a handshake
     # error when we communicate with the lnd rpc server.
@@ -21,7 +22,7 @@ def main():
         macaroon_bytes = f.read()
         macaroon = codecs.encode(macaroon_bytes, 'hex')
 
-    def metadata_callback(context, callback):
+    def metadata_callback(_context, callback):
         # for more info see grpc docs
         callback([('macaroon', macaroon)], None)
 
@@ -36,14 +37,20 @@ def main():
     # finally pass in the combined credentials when creating a channel
     channel = grpc.secure_channel('localhost:10009', combined_creds)
     stub = lnrpc.LightningStub(channel)
+    return stub
+
+def main():
+    stub = connect()
     form = cgi.FieldStorage()
-    value = long(form["value"].value) if "value" in form.keys() else 0
+    value = int(form["value"].value) if "value" in form.keys() else 0
     memo = form["memo"].value if "memo" in form.keys() else ""
 
     invoice = stub.AddInvoice(ln.Invoice(memo=memo, value=value))
     print("Content-Type: application/json; charset=UTF-8")
     print("")
-    print('{"r_hash":"%s","payment_request":"%s","add_index":%d}' % (binascii.hexlify(invoice.r_hash),invoice.payment_request,invoice.add_index))
+    print('{"r_hash":"%s","payment_request":"%s","add_index":%d}'
+          % (binascii.hexlify(invoice.r_hash),
+             invoice.payment_request, invoice.add_index))
 
 
 debug = False
@@ -52,7 +59,7 @@ if debug:
     sys.stderr = sys.stdout
 try:
     main()
-except:
+except Exception:
     import traceback
     print("Status: 500 Internal Error")
     print("Content-Type: text/html; charset=UTF-8")
