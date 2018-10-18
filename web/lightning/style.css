@@ -68,3 +68,20 @@ body {
     font-family: Arial, sans-serif;
     font-weight: bold;
 }
+
+.footnotebox {
+    position: relative;
+    vertical-align: baseline;
+}
+
+.footnote {
+    position: absolute;
+    min-width: 20em;
+    left: 0px;
+    top: 25px;
+    font-size: .7em;
+    border: 1px solid;
+    padding: 5px;
+    background-color: #fff;
+    z-index: 9999;
+}

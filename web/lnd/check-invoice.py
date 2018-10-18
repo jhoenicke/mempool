@@ -71,3 +71,5 @@ except:
         print("<pre>")
         traceback.print_exc()
         print("</pre>")
+    else:
+        traceback.print_exc()

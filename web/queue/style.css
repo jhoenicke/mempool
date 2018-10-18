@@ -8,7 +8,7 @@ a {
 }
 .lnk {
     margin: 1px;
-    text-size: 14px;
+    font-size: 14px;
     text-decoration: none;
     border: 1px solid #888;
     padding-top: 1px;
