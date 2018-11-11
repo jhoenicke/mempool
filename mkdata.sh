@@ -1,8 +1,6 @@
 #!/bin/bash
 
 MEMPOOL=mempool.log
-DESTDIR=/dev/shm/mempool-btc
-mkdir -p $DESTDIR
 
 createfile() {
   (echo 'call(['; eval "$CMD"; echo '])') > $DESTDIR/$NAME.js.new
