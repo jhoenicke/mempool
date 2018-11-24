@@ -295,7 +295,7 @@ function addData(raw, dataidx, unit) {
                 }
             }
             var amount = 0;
-            for (k = show[j]; k < (j == show.length ? ranges.length : show[j + 1]); k++) {
+            for (k = show[j]; k < (j == show.length - 1 ? config[currconfig].ranges.length : show[j + 1]); k++) {
                 amount = amount + get(raw[i][dataidx+1],k);
             }
             data[dataidx][j].push([raw[i][0]*1000, amount/unit]);
