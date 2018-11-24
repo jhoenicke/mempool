@@ -19,6 +19,7 @@
 var charts;
 var config = [
     {"name":"BTC",
+     "title":"Bitcoin Core.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
      "url":"https://dedi.jochen-hoenicke.de/queue/",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
@@ -35,6 +36,7 @@ var config = [
              ],
      "inc": true},
     {"name":"BTC (default mempool)",
+     "title":"Bitcoin Core with default mempool settings (300 MB + 14 days timeout).",
      "url":"https://core.jochen-hoenicke.de/queue/",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
@@ -48,7 +50,8 @@ var config = [
                  "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
                  "#001080", "#ffff00", "#20c020", "#0000c0" ],
      "inc": false},
-    {"name":"BCH (ABC)",
+    {"name":"BCH",
+     "title":"Bitcoin Cash - This node runs ABC 0.18.3.",
      "url":"https://dedi.jochen-hoenicke.de/queue/cash/",
      "symbol":"BCH",
      "satPerUnit": 100000000.0,
@@ -62,21 +65,8 @@ var config = [
                "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
                "#001080"],
      "inc": true},
-    {"name":"BCH (BIP135)",
-     "url":"https://jochen-hoenicke.de/queue/cash/",
-     "symbol":"BCH",
-     "satPerUnit": 100000000.0,
-     "feelevel": 1,
-     "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 27, 28, 29 ],
-     "colors": [ "#535154", "#001080", "#349dac", "#a21010", "#7e5e82", "#84b200", "#a0d0cd",
-               "#c7b52e", "#6cbbea", "#514f4c", "#4e7fbb", "#9f63a0",
-               "#f69445", "#349dac", "#c7b52e", "#514f4c", "#c14540",
-               "#7e2e82", "#54b200", "#1e7fbb", "#f67405", "#60e0cd",
-               "#e12000", "#123456", "#fe3dba", "#349d00", "#bd00ed",
-               "#001080"],
-     "inc": true},
-    {"name":"BCH (SV)",
+    {"name":"BSV",
+     "title":"Bitcoin SV 0.1.0.",
      "url":"https://btg.jochen-hoenicke.de/queuesv/",
      "symbol":"BCH",
      "satPerUnit": 100000000.0,
@@ -91,6 +81,7 @@ var config = [
                "#001080"],
      "inc": true},
     {"name":"LTC",
+     "title":"Litecoin Core with higher memory limit.",
      "url":"https://dedi.jochen-hoenicke.de/queue/litecoin/",
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
@@ -107,6 +98,7 @@ var config = [
                  "#001080"],
      "inc": true},
     {"name":"DASH",
+     "title":"Dash Core with default memory limit.",
      "url":"https://dedi.jochen-hoenicke.de/queue/dash/",
      "symbol":"DASH",
      "satPerUnit": 100000000.0,
@@ -525,8 +517,12 @@ function main() {
     var divconfig = document.getElementById("configs");
     for (var i = 0; i < config.length; i++) {
         var name = config[i].name;
+        var title = config[i].title;
         var btn = document.createElement("a");
         btn.text = name;
+        if (title) {
+            btn.title = title;
+        }
         (function() {
             var cfg = i;
             btn.onclick = function(e) { setconfig(cfg); button(currtimespan); }
