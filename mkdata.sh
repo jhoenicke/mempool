@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# create the JSON files delivering the summarized mempool
+
 MEMPOOL=mempool.log
 
 createfile() {
