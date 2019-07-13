@@ -21,6 +21,7 @@
 <div id="invoice" class="tabcontent">
    <p>Scan or click this QRCode to start a payment.</p>
    <div class="lncontainer">
+     <div id="qrwait" class="lnwait">creating payment request<br/>please wait...</div>
      <a id="qrlink" href="#"><canvas id="qrinvoice" class="lnqrcode"></canvas></a>
      <div id="qrpayed" class="lnsettled">PAID<br/>Thank You</div>
    </div>
@@ -30,15 +31,15 @@
 </div>
 <div id="setamount" class="tabcontent">
    Pay for server time <span class="footnotebox"><a href="#" onclick="toggle('footnote1')">[*]</a><span id="footnote1" class="footnote" style="display:none;">
-   Server cost is 47 €/month, (<span id="btcprice">5400</span> €/BTC).<br/>
-   So one day costs 1.55 €.
+   Server cost is 48 €/month, (<span id="btcprice">5400</span> €/BTC).<br/>
+   So one day costs 1.60 €.
 </span></span>:
-   <input type="button" value="1 hour" onclick="setvalue(.06431)" />
-   <input type="button" value="1 day" onclick="setvalue(1.543)" />
-   <input type="button" value="1 week" onclick="setvalue(10.80)" />
-   <input type="button" value="1 month" onclick="setvalue(46.98)" /><br/>
+   <input type="button" value="1 hour" onclick="setvalue(.06667)" />
+   <input type="button" value="1 day" onclick="setvalue(1.600)" />
+   <input type="button" value="1 week" onclick="setvalue(11.20)" />
+   <input type="button" value="1 month" onclick="setvalue(48.00)" /><br/>
    <p>or amount in bits (microbitcoin): <input type="number" id="value" size="8" value="" /></p>
-   <p>Memo: <input type="text" id="memo" size="30" value="Donation for Johoe's mempool" /></p>
+   <p>Memo: <input type="text" id="memo" size="30" value="" /></p>
    <input type="button" value="Get invoice" onclick="invoice()" />
 </div>
 <script>
@@ -96,6 +97,7 @@
   }
 
   function requestInvoice(value, memo) {
+    document.getElementById("qrwait").style.display = "block";
     document.getElementById("qrlink").href = "#";
     document.getElementById("textinvoice").value = "";
     var canvas = document.getElementById("qrinvoice");
@@ -109,6 +111,7 @@
        paymentrhash = rhash;
        paymentrequest = invoice.payment_request;
        var qrcode = qrcodegen.QrCode.encodeText(paymentrequest.toUpperCase(), qrcodegen.QrCode.Ecc.LOW);
+       document.getElementById("qrwait").style.display = "none";
        qrcode.drawCanvas(scale, border, document.getElementById("qrinvoice"));
        document.getElementById("qrlink").href = "lightning:" + paymentrequest;
        document.getElementById("textinvoice").value = paymentrequest;
@@ -142,7 +145,12 @@
     }
   }
   function loadDoc() {
-    requestInvoice(0, "Donation to Johoe's mempool");
+    var donationfor = "Johoe's mempool";
+    if (location.hash.length > 0) {
+        donationfor = location.hash.substring(1);
+    }
+    document.getElementById("memo").value = "Donation for " + donationfor;
+    requestInvoice(0, "Donation to " + donationfor);
     xhttpbtc.open("GET", "https://bitcoinapi.de/widget/current-btc-price/rate.json?culture=de", true);
     xhttpbtc.send();
   }
