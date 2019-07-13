@@ -63,3 +63,6 @@ root.  Finally link to the dynamic js files in `/dev/shm/mempool-btc`.
     cd $HOME/mempool/web/queue
     sudo ln -s $HOME/mempool/web/* /var/www/html
     ln -s /dev/shm/mempool-btc/*.js $HOME/mempool/web/queue/
+
+You then need to open `$HOME/mempool/web/queue/mempool.js` in your favorite
+editor and change the config array to include your web server configuration.
