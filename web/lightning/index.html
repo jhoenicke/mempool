@@ -31,19 +31,31 @@
 </div>
 <div id="setamount" class="tabcontent">
    Pay for server time <span class="footnotebox"><a href="#" onclick="toggle('footnote1')">[*]</a><span id="footnote1" class="footnote" style="display:none;">
-   Server cost is 48 €/month, (<span id="btcprice">5400</span> €/BTC).<br/>
+   Server cost is 48 €/month.<br/>
    So one day costs 1.60 €.
 </span></span>:
-   <input type="button" value="1 hour" onclick="setvalue(.06667)" />
-   <input type="button" value="1 day" onclick="setvalue(1.600)" />
-   <input type="button" value="1 week" onclick="setvalue(11.20)" />
-   <input type="button" value="1 month" onclick="setvalue(48.00)" /><br/>
-   <p>or amount in bits (microbitcoin): <input type="number" id="value" size="8" value="" /></p>
-   <p>Memo: <input type="text" id="memo" size="30" value="" /></p>
+   <input type="button" value="1 hour" onclick="setvalue(.07, 'EUR')" />
+   <input type="button" value="1 day" onclick="setvalue(1.60, 'EUR')" />
+   <input type="button" value="1 week" onclick="setvalue(11.20, 'EUR')" />
+   <input type="button" value="1 month" onclick="setvalue(48.00, 'EUR')" /><br/>
+   <p>Amount: <input type="number" id="value" value="" onchange="updateValue()" style="text-align:right;" />
+     <select id="unit" value="sat" onchange="updateValue()">
+       <option value="sat">sat</option>
+       <option value="bit">bit</option>
+       <option value="USD">USD</option>
+       <option value="EUR">EUR</option>
+       <option value="BTC">BTC</option>
+     </select></p>
+   <p style="text-align:right;"> =
+     <span id="btcvalue">0</span> BTC
+     (<span id="factor">1</span> <span id="unit2">BTC</span>/BTC).</p>
+   <p>Memo: <input type="text" id="memo" size="30" value="Donation for Johoe's mempool" /></p>
    <input type="button" value="Get invoice" onclick="invoice()" />
 </div>
 <script>
-  var bitcoinprice = 5550;
+  var btceur = 10138;
+  var btcusd = 11397;
+  var valueinsat = 0;
   var border = 4;
   var scale = 4;
   var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@37.221.198.57:9735";
@@ -52,20 +64,49 @@
   document.getElementById("textnode").value = uri;
   var paymentrhash;
 
-  function setvalue(value) {
-    var valinbits = Math.floor((value * 1000000.0 / bitcoinprice) + 0.5);
-    document.getElementById("value").value = valinbits;
+  function setvalue(value, unit) {
+    document.getElementById("value").value = value;
+    document.getElementById("unit").value = unit;
+    updateValue();
+  }
+
+  function updateValue() {
+    var value = document.getElementById("value").value;
+    var unit = document.getElementById("unit").value;
+    var factor = 1.0;
+    switch(unit) {
+    case "BTC":
+      factor = 1.0;
+      break;
+    case "EUR":
+      factor = btceur;
+      break;
+    case "USD":
+      factor = btcusd;
+      break;
+    case "bit":
+      factor = 1000000.0;
+      break;
+    case "sat":
+      factor = 100000000.0;
+      break;
+    }
+    valueinsat = Math.floor((value * 100000000.0 / factor) + 0.5);
+    document.getElementById("btcvalue").innerHTML = (valueinsat/100000000.0).toFixed(8);
+
+    document.getElementById("factor").innerHTML = factor;
+    document.getElementById("unit2").innerHTML = unit;
   }
 
   function invoice() {
-    var value = document.getElementById("value").value;
+    var value = ~~valueinsat;
     var memo = document.getElementById("memo").value;
     if (value < 0) {
       alert("Nice try :) Please enter a positive value");
       return;
     }
-    if (value > 42949) {
-      alert("Please keep amount to less than 40 000 bits");
+    if (value > 4294967) {
+      alert("Please keep amount to less than 0.04 BTC");
       return;
     }
     requestInvoice(value, memo);
@@ -127,21 +168,18 @@
          }
       }
     }
-    var params = "memo="+encodeURIComponent(memo)+"&value="+~~(value*100);
+    var params = "memo="+encodeURIComponent(memo)+"&value="+~~value;
     xhttp.open("POST", "/lnd/invoice.py?"+params, true);
     xhttp.send();
   }
 
-  document.getElementById("btcprice").innerHTML = bitcoinprice;
   var xhttpbtc = new XMLHttpRequest();
   xhttpbtc.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       var response = JSON.parse(this.responseText);
-      var pricestr = response.price_eur;
-      pricestr = pricestr.replace(/\./g, "");
-      pricestr = pricestr.replace(/,/g, ".");
-      bitcoinprice = parseFloat(pricestr);
-      document.getElementById("btcprice").innerHTML = bitcoinprice;
+      btcusd = response.bpi.USD.rate_float;
+      btceur = response.bpi.EUR.rate_float;
+      updateValue();
     }
   }
   function loadDoc() {
@@ -151,8 +189,9 @@
     }
     document.getElementById("memo").value = "Donation for " + donationfor;
     requestInvoice(0, "Donation to " + donationfor);
-    xhttpbtc.open("GET", "https://bitcoinapi.de/widget/current-btc-price/rate.json?culture=de", true);
+    xhttpbtc.open("GET", "https://api.coindesk.com/v1/bpi/currentprice.json", true);
     xhttpbtc.send();
+    updateValue();
   }
 
   function selectTab(button, name) {
