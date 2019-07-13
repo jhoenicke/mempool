@@ -34,14 +34,14 @@
   </script>
   <div>
     <p>
-      This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per byte.  The data is generated from my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
+      This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per (virtual) byte.  The data is generated from my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
       The idea is based on the retired service bitcoinqueue.com.
     </p>
     <p>The data is separated into different fee levels given in satoshi per bytes.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1 MB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
 
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
 
-    <p>Note that sizes include the segwit discount.  So for the core chain, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size minus three quarter of the witness size.  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
+    <p>Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
    </div>
 
    <h2>Donation Addresses</h2>
