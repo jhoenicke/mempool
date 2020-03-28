@@ -19,8 +19,8 @@ found = False
 
 def parse_txdata(obj):
     global sizes, count, fees, found
-    if "size" in obj:
-        size = obj["size"]
+    if "vsize" in obj:
+        size = obj["vsize"]
         fee = int(obj["fee"]*100000000)
         if "ancestorsize" in obj:
             asize = obj["ancestorsize"]
