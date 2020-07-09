@@ -45,7 +45,7 @@ try {
     $query = $db->prepare("SELECT * FROM mempool WHERE time >= :start AND time < :end and (time DIV 60) MOD :increment = 0 ORDER BY time");
 
     $query->execute(array(':start' => $start, ':end' => $end, ':increment' => $increment));
-    header("Content-Type: application/json; charset=UTF-8");
+    header("Content-Type: application/javascript; charset=UTF-8");
     echo 'call([';
     $comma="";
     while ($row = $query->fetch(PDO::FETCH_NUM)) {
