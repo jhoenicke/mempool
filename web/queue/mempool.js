@@ -19,9 +19,11 @@
 var charts;
 var config = [
     {"name":"BTC",
-     "title":"Bitcoin Core 0.18.1.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
+     "title":"Bitcoin Core 0.19.1.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
 /*
      "url":"https://jochen-hoenicke.de/queue/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -37,6 +39,8 @@ var config = [
      "inc": false},
 */
      "url":"https://johoe.jochen-hoenicke.de/queue/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -54,6 +58,8 @@ var config = [
     {"name":"BTC (default mempool)",
      "title":"Bitcoin Core with default mempool settings (300 MB + 14 days timeout).",
      "url":"https://core.jochen-hoenicke.de/queue/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 0,
@@ -68,9 +74,30 @@ var config = [
    "#000000"
              ],
      "inc": true},
+    {"name":"ETH",
+     "title":"geth 1.9.24 with 14k slots; queue not shown (experimental)",
+     "url":"https://johoe.jochen-hoenicke.de/queue/ethereum/",
+     "symbol":"ETH",
+     "sizeunit":"Mgas",
+     "priceunit":"Gwei",
+     "satPerUnit": 1000000000.0,
+     "feelevel": 1,
+     "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+     "colors": [
+   "#535154", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
+   "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
+   "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
+   "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
+   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
+   "#000000"
+             ],
+     "inc": true},
     {"name":"BCH",
-     "title":"Bitcoin Cash - BCHN 0.21.0.",
+     "title":"Bitcoin Cash - BCHN 22.0.0.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"BCH",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -88,6 +115,8 @@ var config = [
     {"name":"BSV",
      "title":"Bitcoin SV 1.0.3",
      "url":"https://sv.jochen-hoenicke.de/queuesv/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"BSV",
      "satPerUnit": 100000000.0,
      "feelevel": 0,
@@ -105,6 +134,8 @@ var config = [
     {"name":"LTC",
      "title":"Litecoin Core with higher memory limit.",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
+     "sizeunit":"MB",
+     "priceunit":"lit/B",
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -124,6 +155,8 @@ var config = [
     {"name":"LTC",
      "title":"Litecoin Core",
      "url":"https://jochen-hoenicke.de/queue/litecoin/",
+     "sizeunit":"MB",
+     "priceunit":"sat/B",
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
      "feelevel": 0,
@@ -141,8 +174,10 @@ var config = [
      "inc": false},
 */
     {"name":"DASH",
-     "title":"Dash Core v0.15.0.0 with default memory limit",
+     "title":"Dash Core v0.16.1.1 with default memory limit",
      "url":"https://johoe.jochen-hoenicke.de/queue/dash/",
+     "sizeunit":"MB",
+     "priceunit":"Duff/B",
      "symbol":"DASH",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -172,7 +207,7 @@ var currtimespan;
 function units(chart) {
     switch (chart) {
     case 0: return "tx";
-    case 1: return "MB";
+    case 1: return config[currconfig].sizeunit;
     case 2: return config[currconfig].symbol;
     }
 }
@@ -186,7 +221,7 @@ function scale(chart) {
 function title(chart) {
     switch (chart) {
     case 0: return "Unconfirmed Transaction Count (Mempool)";
-    case 1: return "Mempool Size in MB";
+    case 1: return "Mempool Size in " + config[currconfig].sizeunit;
     case 2: return "Pending Transaction Fee in " + config[currconfig].symbol;
     }
 }
@@ -370,13 +405,14 @@ function updateData(plotdata, dataidx) {
 
 function convertData(raw, dataidx, unit) {
     var show = config[currconfig].show;
+    var priceunit = config[currconfig].priceunit;
     var converted = [];
     var j;
     var theData = storeData(raw, dataidx, unit);
     for (j = 0; j < show.length; j++) {
         var name = config[currconfig].ranges[show[j]];
         var legend =
-            j == show.length-1 ? (name+"+ sat/B") :
+            j == show.length-1 ? (name+"+ "+priceunit) :
             name+"-"+config[currconfig].ranges[show[j+1]];
         var color = config[currconfig].colors[j];
         converted.push({
