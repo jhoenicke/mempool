@@ -20,10 +20,7 @@ fi
 if ! mkdir $DESTDIR/LOCK 2>/dev/null; then
     exit
 fi
-LINE=$(geth --exec "txpool.content" attach | \
-	perl -pe 's/^(\s*)([a-zA-Z0-9]*):(.*)/$1"$2":$3/' | \
-	jq '.pending' | \
-	python3 txpool_parse.py)
+LINE=$(geth --exec 'txpool.inspect.pending' attach | perl parse_inspect.pl)
 
 echo $LINE >> mempool.log
 (
