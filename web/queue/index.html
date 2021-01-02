@@ -9,7 +9,7 @@
     <script src="../flot/jquery.flot.resize.min.js"></script>
     <script src="../flot/jquery.flot.selection.min.js"></script>
     <script src="../flot/jquery.flot.navigate.min.js"></script>
-    <script src="mempool.js?v=2.0.13b"></script>
+    <script src="mempool.js?v=2.0.14"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="Content-Language" content="en"/>
@@ -19,7 +19,7 @@
     <meta property="og:image" content="https://jochen-hoenicke.de/queue/mempool-20201126-eth.png"/>
     <link href="style.css" rel="stylesheet" type="text/css"/>
 </head>
-<body>
+<body onLoad="main();">
   <div class="header">
     <b>Johoe's Bitcoin Mempool Statistics</b> &ndash;
     <div id="configs" style="display: inline-block;"></div>
@@ -29,47 +29,63 @@
   <div id="chartContainer3" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="chartContainer2" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="tooltip"></div>
-  <script>
-     main();
-  </script>
   <div>
     <p>
-      This page displays the number and size of the unconfirmed bitcoin transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the amount of fee they pay per (virtual) byte.  The data is generated from my full node and is updated every minute.  Note that in bitcoin there is no global mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
+      This page displays the number and size of the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch ltc dash">amount of fee they pay per (virtual) byte</span><span class="eth">gas price they pay</span>.  The data is generated from my full node and is updated every minute.  Note that in decentralized cryptocurrencies there is no global transaction mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
       The idea is based on the retired service bitcoinqueue.com.
     </p>
-    <p>The data is separated into different fee levels given in satoshi per bytes.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top 1 MB from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are larger than the average.</p>
+    <p>The data is separated into different fee levels <span class="btc bch ltc dash">given in satoshi per bytes</span><span class="eth">corresponding to the gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  The bottom-most chart shows the same statistics but uses the total transaction <span class="btc bch ltc dash">size</dspan><span class="eth">gas limit</span> instead of the number of transactions as the y axis.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are <span class="btc bch ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.</p>
 
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
 
-    <p>Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
-   </div>
+<p class="btc ltc">Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
 
-   <h2>Donation Addresses</h2>
+  <p class="eth">Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p>
+   </span>
+
+   <h2>Donation Address (please choose currency on top of the page)</h2>
     <div class="centered">
+      <div class="btc">
       <div class="donation">
-        <a href="bitcoin:bc1qm9hxngjd6hj44yn73p26f5k854u98krsm0fn5n"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA0ElEQVQI12NABvaTf71/wKDQ/7FDgUFvu3z3Aga9HY+ygeSKCCBbYVk2hwKD/apV6x8wMKh4Agn9xuT1DQyiUb0yCQwctzLFGxhEghYbL2AwvuXZ6MCgofpJcgGDzrW5ugcYLKTXZwLFZ+yd1sBgFyjc2MBgdDug4wCDeb6t+QIGzqalTQ4MFiEnZBQYNJY9ZHRgUA7yzwDqXXP3P9BZSo+SHjDYN716zQB0g7sy0D17O+wYGPR2J11LYNBb07SggUGhYbVWA4P9goWPHZA9BABn6UepgMPvWQAAAABJRU5ErkJggg==" alt=""/><img class="qrlogo" src="bc-logo-32x32.png" alt=""/></div></a><a href="#" onClick="window.open('../lightning/','ln','resizeable,height=600,width=500'); return false;"><img class="bolt" src="../lightning/lightning-bolt.png" alt="lightning" /></a><br />
-        bitcoin:<a href="bitcoin:bc1qm9hxngjd6hj44yn73p26f5k854u98krsm0fn5n">bc1qm9hxngjd6hj44yn73p26f5k854u98krsm0fn5n</a><br/>
-        (old bitcoin:<a href="bitcoin:3KwNxt5tX2U6riFjGNBa3ZXshzYyAUeGJ7">3KwNxt5tX2U6riFjGNBa3ZXshzYyAUeGJ7</a>)
+        <a href="bitcoin:bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvbzDp1/wKDQ0XtCgUFvz67XCxj05oV2A8ndT7MXMChsntWhwGC/atX6BwwMIm0KDAxCezdca2AQdBKaoMCgtZbfR4GB2enIDAUGkzUMMxMYbGv/yTgwGBzQenqAgU2/MXgBg86/t90PGEQ8WHIfMKie0N3MwGBXmNnCwKA0X8lIgcEib27qAQbOvX//ODBwOcTVPGCwPv7IDmiN9e5FB4Buu5J1gEFhyr9FQLdtVNmXwKDXd975AdCFWs0MDAqLNV4A3T+p/ZoCsocA7cxIjR7lu34AAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="bc-logo-32x32.png" alt=""/></div></a><a href="#" onClick="window.open('../lightning/','ln','resizeable,height=600,width=500'); return false;"><img class="bolt" src="../lightning/lightning-bolt.png" alt="lightning" /></a><br />
+        bitcoin:<a href="bitcoin:bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj">bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj</a><br/>
+        (old bitcoin:<a href="bitcoin:32qSSph68dpGcsJissY4xnZKNHVWaL7Eq6">32qSSph68dpGcsJissY4xnZKNHVWaL7Eq6</a>)
       </div>
+      </div>
+      <div class="bch">
       <div class="donation">
-        <a href="bitcoincash:qzpg8k2j84pwdtuf7ll4kuszw6d5g3p9xcgk704qzg"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUAQMAAABP8pKXAAAABlBMVEX///8AAABVwtN+AAABAElEQVRIx83V0Q2DQAwDUG/g/bf0Bq5j1C5gPhpO1+QhkVSHBP4+bAuyRLDFaEKEuQArxWzJ2FbJVZ7tQHjNkvJ2vmK3iNYtNuux/CLFajiXyW81Worn4WVzNUPpQTQorAbRUTJOO7pZ8qwUUH7g2Z6hnUgWGk3BGEjiJtZohIJUyrtpjAaTyPqKVuuY/fu8fLTkPO8reRtWA7OMp4Go0Ujf1fcyZoyWXSSNGHpvsxAcSoPniEaLBCBF23A1kd2SJryarUi/Ak5ObNa4ilCHXi2lojDYbqsdyORVyjWbFVPQTL93DExmMvyGJZehZ/bVjp9ReaNjtJ5Rn93ck/19fADSM8pBJzawzQAAAABJRU5ErkJggg==" alt=""/><img class="qrlogo" src="bch-logo-30.png" alt=""/></div></a><br/>
-        <a href="bitcoincash:qzpg8k2j84pwdtuf7ll4kuszw6d5g3p9xcgk704qzg">bitcoincash:qzpg8k2j84pwdtuf7ll4kuszw6d5g3p9xcgk704qzg</a><br/>
-        (old bitcoincash:<a href="bitcoincash:1Cu6nxjUgACKweizhfRAdrAqJH4ugSW9JP">1Cu6nxjUgACKweizhfRAdrAqJH4ugSW9JP</a>)
+        <a href="bitcoincash:qrmvslxxyhquqenejs4m6yyca5meyxdlsg2shkhc7p"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvZNrv0PGBRmrvVQYNDbNH/1Aga9lqvaQHJ9SPcCBoUVrzsUGOxXrVr/gIFB0AxICK1ZFdbAoGFfNEWBge/hiicKDFbpbQEODKqb0xc7MChxxk91YDDb9mLpAQZezwfzFRjk9szVesBgl8rx9QGDwGffaAUGIQ4xHwWgGqtLQJW8KYIODNyfPVgOMLCl6W98wGC7amn9AQYGw6OLDjDYz+ladYBBYYLEIgYGvW2OdkAXNlh7PWDQ6xSMamBQ2HylEOj+WfrbFiB7CACc9kUEyrgWFAAAAABJRU5ErkJggg==" alt=""/><img class="qrlogo" src="bch-logo-30.png" alt=""/></div></a><br/>
+        <a href="bitcoincash:qrmvslxxyhquqenejs4m6yyca5meyxdlsg2shkhc7p">bitcoincash:qrmvslxxyhquqenejs4m6yyca5meyxdlsg2shkhc7p</a><br/>
+        (old bitcoincash:<a href="bitcoincash:1PVsQJLe68sknbrugMU57jDgDnAbpn7Tru">1PVsQJLe68sknbrugMU57jDgDnAbpn7Tru</a>)
       </div>
+      </div>
+      <div class="ltc">
       <div class="donation">
         <a href="litecoin:ltc1qp2qsuh73rrj8gxpvw65ck554qfnv8s5pke3qzm"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvZTW9Y/YFDojj2hwKA3vWv1Aga9Za9OA8nJ+14vYFDY9LlDgcF+1SqgGgY1DwcGBom2u7oMDLLxCVkPGASe2O9OYBDOWnNTgcH22v32BwxmjtKvHjCIvZiV94BBqVB8IQOD9J0bmxkYFIVL9Q8wyK2LE0xgEKlbH/aAgeu0pOMCBkbWB4wJDGY/dGoeMDAnGgYpMJjfELU/wMBg8OnxAaDbQlc1MChM+LcI6La50f8aGPQaTy08wKC3taof6ObFYl1At034mJuA7CEA8yNLCukmy7UAAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="ltc-32px.png" alt=""/></div></a><br />
         litecoin:<a href="litecoin:ltc1qp2qsuh73rrj8gxpvw65ck554qfnv8s5pke3qzm">ltc1qp2qsuh73rrj8gxpvw65ck554qfnv8s5pke3qzm</a><br/>
         (old litecoin:<a href="litecoin:MK7jfGG48RTsETCXTAz1wP27uVoFhBUV5o">MK7jfGG48RTsETCXTAz1wP27uVoFhBUV5o</a>)
       </div>
+      </div>
+      <div class="dash">
       <div class="donation">
         <a href="dash:XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA0UlEQVQI12NABvZr1c4/YFBYap6hwKC3bJn3Aga9raKngeRKxu4FDAp9N4Hi9qtWrX/AwKBavICBQepcCPcDBmXFUy8ZGERPbWJ+wGCfq/jPgYF1paolA4NYylXDBwzq/RPkgOIBsjYODPzPZ0U8YBA3KRJMYNBZUb07gUE2t3eeA4Pw3WP/FBjYOb4pJjBod17vT2CQ5yn+ocCg+bH3P9Au4wWLFzDY72vUArptBocyA4Pemhr7BAa9GaqOQHKtoxjQbWu2XndgsJ+yqDIB2UMAFahFDpSQnIQAAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="dash-32px.png" alt=""/></div></a><br />
         dash:<a href="dash:XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk">XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk</a><br/>&nbsp;
       </div>
-        <p>
-        ethereum: <span class="cover pixelated" style="width: 20px;height:20px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;"></span>&nbsp;mempool.hoenicke.eth</p>
+      </div>
+      <div class="eth">
+      <div class="donation">
+	<span class="cover pixelated" style="width: 60px;height:60px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;">
+	</span><br />
+	ethereum: mempool.hoenicke.eth<br />
+        <input type="text" id="ethaddress" size="40" value="0xC6F9a38C4B0269Deef360aeD2852b7D22b6297d9" style="border: none;" readonly />
+	<a id="copyaddressbutton" href="javascript:copyToClip('ethaddress');" title="Copy address to clipboard"><sup>copy</sup></a>
+<span id="linkIcon" class="btn-icon__inner far fa-copy"></span>
+</a>
+      </div>
+      </div>
     </div>
     <div class="centered" style="font-size: 13px; margin: 20px;">
         Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br/>
-        © 2016-2019 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
+        © 2016-2021 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
     </div>
 </html>

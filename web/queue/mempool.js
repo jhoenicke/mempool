@@ -17,8 +17,10 @@
 */
 
 var charts;
+var classes = [ "btc", "bch", "ltc", "dash", "eth" ];
 var config = [
     {"name":"BTC",
+     "classname": "btc",
      "title":"Bitcoin Core 0.19.1.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
 /*
      "url":"https://jochen-hoenicke.de/queue/",
@@ -56,6 +58,7 @@ var config = [
              ],
      "inc": true},
     {"name":"BTC (default mempool)",
+     "classname": "btc",
      "title":"Bitcoin Core with default mempool settings (300 MB + 14 days timeout).",
      "url":"https://core.jochen-hoenicke.de/queue/",
      "sizeunit":"MB",
@@ -75,13 +78,14 @@ var config = [
              ],
      "inc": true},
     {"name":"ETH",
-     "title":"geth 1.9.24 with 14k slots; queue not shown (experimental)",
+     "classname":"eth",
+     "title":"geth 1.9.25 with 150k slots (experimental)",
      "url":"https://johoe.jochen-hoenicke.de/queue/ethereum/",
      "symbol":"ETH",
      "sizeunit":"Mgas",
      "priceunit":"Gwei",
      "satPerUnit": 1000000000.0,
-     "feelevel": 1,
+     "feelevel": 9,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
      "colors": [
@@ -94,6 +98,7 @@ var config = [
              ],
      "inc": true},
     {"name":"BCH",
+     "classname": "bch",
      "title":"Bitcoin Cash - BCHN 22.0.0.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
      "sizeunit":"MB",
@@ -113,6 +118,7 @@ var config = [
    "#000000" ],
      "inc": true},
     {"name":"BSV",
+     "classname": "bch",
      "title":"Bitcoin SV 1.0.3",
      "url":"https://sv.jochen-hoenicke.de/queuesv/",
      "sizeunit":"MB",
@@ -132,6 +138,7 @@ var config = [
              ],
       "inc": true},
     {"name":"LTC",
+     "classname": "ltc",
      "title":"Litecoin Core with higher memory limit.",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
      "sizeunit":"MB",
@@ -153,6 +160,7 @@ var config = [
      "inc": true}, 
 /*
     {"name":"LTC",
+     "classname": "ltc",
      "title":"Litecoin Core",
      "url":"https://jochen-hoenicke.de/queue/litecoin/",
      "sizeunit":"MB",
@@ -174,6 +182,7 @@ var config = [
      "inc": false},
 */
     {"name":"DASH",
+     "classname": "dash",
      "title":"Dash Core v0.16.1.1 with default memory limit",
      "url":"https://johoe.jochen-hoenicke.de/queue/dash/",
      "sizeunit":"MB",
@@ -539,6 +548,14 @@ function setconfig(cfg) {
         }
     }
     currconfig = cfg;
+    for (i = 0; i < classes.length; i++) {
+	for (let el of document.getElementsByClassName(classes[i])) {
+	    el.style.display = 'none';
+	}
+    }
+    for (let el of document.getElementsByClassName(config[currconfig].classname)) {
+	el.style.display = 'inline';
+    }
 }
 
 function selectbutton(timespan) {
@@ -579,6 +596,13 @@ function button(timespan) {
     location.hash = "#" + currconfig + "," + timespan;
     loadJSONP(config[currconfig].url + timespan + ".js", loadData);
     selectbutton(timespan);
+}
+
+function copyToClip(fldname) {
+    var fld = document.getElementById(fldname);
+    fld.select();
+    fld.setSelectionRange(0,9999);
+    document.execCommand("copy");
 }
 
 function main() {
