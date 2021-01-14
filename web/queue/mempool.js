@@ -490,10 +490,8 @@ function showMempool(rawdata) {
 }
 
 function zoomData(rawdata) {
-    storeData(rawdata, 0, 1);
-    storeData(rawdata, 1, 1000000.0);
-    storeData(rawdata, 2, 100000000.0);
     for (var i = 0; i < 3; i++) {
+        storeData(rawdata, i, scale(i));
         charts[i].setData(updateData(charts[i].getData(), i));
     }
     for (var i = 0; i < 3; i++) {
