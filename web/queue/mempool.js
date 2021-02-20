@@ -612,7 +612,8 @@ function update() {
 function sethash() {
     var optfeelevel = "";
     if (feelevel != config[currconfig].feelevel) {
-	optfeelevel = "," + feelevel;
+	optfeelevel = "," +
+	    config[currconfig].ranges[config[currconfig].show[feelevel]];
     }
     location.hash = "#" + config[currconfig].name + "," + currtimespan + optfeelevel;
 }
@@ -693,7 +694,10 @@ function main() {
     }
     setconfig(hashconfig);
     if (hashfeelevel >= 0) {
-	feelevel = hashfeelevel;
+	feelevel = config[currconfig].show.findIndex(show => config[currconfig].ranges[show] >= hashfeelevel);
+	if (feelevel < 0) {
+	    feelevel = config[currconfig].feelevel;
+	}
     }
     button(hashtimespan);
 }
