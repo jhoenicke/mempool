@@ -9,7 +9,7 @@
     <script src="../flot/jquery.flot.resize.min.js"></script>
     <script src="../flot/jquery.flot.selection.min.js"></script>
     <script src="../flot/jquery.flot.navigate.min.js"></script>
-    <script src="mempool.js?v=2.0.14"></script>
+    <script src="mempool.js?v=2.0.15"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="Content-Language" content="en"/>
@@ -31,16 +31,19 @@
   <div id="tooltip"></div>
   <div>
     <p>
-      This page displays the number and size of the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch ltc dash">amount of fee they pay per (virtual) byte</span><span class="eth">gas price they pay</span>.  The data is generated from my full node and is updated every minute.  Note that in decentralized cryptocurrencies there is no global transaction mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
+      This page displays the number and size of the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch bsv doge ltc dash">amount of fee they pay per (virtual) byte</span><span class="eth">gas price they pay</span>.  The data is generated from my full node and is updated every minute.  Note that in decentralized cryptocurrencies there is no global transaction mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
       The idea is based on the retired service bitcoinqueue.com.
     </p>
-    <p>The data is separated into different fee levels <span class="btc bch ltc dash">given in satoshi per bytes</span><span class="eth">corresponding to the gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  The bottom-most chart shows the same statistics but uses the total transaction <span class="btc bch ltc dash">size</dspan><span class="eth">gas limit</span> instead of the number of transactions as the y axis.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are <span class="btc bch ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.</p>
+    <p>The data is separated into different fee levels <span class="btc bch bsv doge ltc dash">given in satoshi per bytes</span><span class="eth">corresponding to the gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  The bottom-most chart shows the same statistics but uses the total transaction <span class="btc bch bsv doge ltc dash">size</dspan><span class="eth">gas limit</span> instead of the number of transactions as the y axis.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are <span class="btc bch bsv doge ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.</p>
 
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
 
 <p class="btc ltc">Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
 
   <p class="eth">Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p>
+
+  <p class="doge">Note that many servers on the dogecoin network are overloaded.
+  This can result in bad block or transaction propagation.  You can clearly see periods where my server did not receive any blocks for an hour, because none of the peers was able to send it. </p>
    </span>
 
    <h2>Donation Address (please choose currency on top of the page)</h2>
@@ -70,6 +73,18 @@
       <div class="donation">
         <a href="dash:XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA0UlEQVQI12NABvZr1c4/YFBYap6hwKC3bJn3Aga9raKngeRKxu4FDAp9N4Hi9qtWrX/AwKBavICBQepcCPcDBmXFUy8ZGERPbWJ+wGCfq/jPgYF1paolA4NYylXDBwzq/RPkgOIBsjYODPzPZ0U8YBA3KRJMYNBZUb07gUE2t3eeA4Pw3WP/FBjYOb4pJjBod17vT2CQ5yn+ocCg+bH3P9Au4wWLFzDY72vUArptBocyA4Pemhr7BAa9GaqOQHKtoxjQbWu2XndgsJ+yqDIB2UMAFahFDpSQnIQAAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="dash-32px.png" alt=""/></div></a><br />
         dash:<a href="dash:XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk">XhvBxZ5WiTK7K8js4uphXCP5QjFQMogAMk</a><br/>&nbsp;
+      </div>
+      </div>
+      <div class="bsv">
+      <div class="donation">
+        <a href="bitcoinsv:1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvZNrv0PGBRmrvVQYNDbNH/1Aga9lqvaQHJ9SPcCBoUVrzsUGOxXrVr/gIFB0AxICK1ZFdbAoGFfNEWBge/hiicKDFbpbQEODKqb0xc7MChxxk91YDDb9mLpAQZezwfzFRjk9szVesBgl8rx9QGDwGffaAUGIQ4xHwWgGqtLQJW8KYIODNyfPVgOMLCl6W98wGC7amn9AQYGw6OLDjDYz+ladYBBYYLEIgYGvW2OdkAXNlh7PWDQ6xSMamBQ2HylEOj+WfrbFiB7CACc9kUEyrgWFAAAAABJRU5ErkJggg==" alt=""/><img class="qrlogo" src="bsv-32px.png" alt=""/></div></a><br />
+	bitcoinsv:<a href="bitcoinsv:1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7">1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7</a><br/>
+      </div>
+      </div>
+      <div class="doge">
+      <div class="donation">
+        <a href="dogecoin:DB1GuDoRbc33VvZRxWSoH76aR16P7D2P56"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAAz0lEQVQI12NABvYzXfkfMCh0/VqhwKA3Wat7AYPeXm4Q2TV/9QIGhcW7OhQY7FetWv+AgcG4oYGBQaLLNZeBgd25R/cBg83lvV4KDOKlZ2YrMIh9mPczgUGJ38piAYPhmWT1BQzCpde0GRhEr1fEANmxZ2IdGITO5b5QYND20/FXYND8Y3begUFc7ORaBQbrW30FCgwsrgn9DgzWv93rgHaZ+S92YLDvin8FdMOUt4+Bbmte+x9I9r8TApJ7nu1KYFDYracOdH/vonwFZA8BAOHdRMBKlE5VAAAAAElFTkSuQmCC" alt=""/><img class="qrlogo" src="doge-32px.png" alt=""/></div></a><br />
+	dogecoin:<a href="dogecoin:DB1GuDoRbc33VvZRxWSoH76aR16P7D2P56">DB1GuDoRbc33VvZRxWSoH76aR16P7D2P56</a><br/>
       </div>
       </div>
       <div class="eth">
