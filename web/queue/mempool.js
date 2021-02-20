@@ -275,6 +275,7 @@ function loadJSONP(url, callback) {
 
 function legendClick(idx) {
     feelevel = idx;
+    sethash();
     for (var i = 0; i < 3; i++) {
         var data = charts[i].getData();
         data = updateData(data, i);
@@ -524,12 +525,10 @@ function zoomData(rawdata) {
 var oldconfig;
 function loadData(rawdata) {
     if (!charts) {
-        feelevel = config[currconfig].feelevel;
         showMempool(rawdata);
         oldconfig = currconfig;
     } else {
         if (currconfig != oldconfig) {
-            feelevel = config[currconfig].feelevel;
             for (var i = 0; i < 3; i++) {
                 charts[i].setData(convertData(rawdata, i, scale(i)));
             }
@@ -574,6 +573,7 @@ function setconfig(cfg) {
     for (let el of document.getElementsByClassName(config[currconfig].classname)) {
 	el.style.display = 'inline';
     }
+    feelevel = config[currconfig].feelevel;
 }
 
 function selectbutton(timespan) {
@@ -609,9 +609,17 @@ function update() {
     });
 }
 
+function sethash() {
+    var optfeelevel = "";
+    if (feelevel != config[currconfig].feelevel) {
+	optfeelevel = "," + feelevel;
+    }
+    location.hash = "#" + config[currconfig].name + "," + currtimespan + optfeelevel;
+}
+
 function button(timespan) {
     currtimespan = timespan;
-    location.hash = "#" + currconfig + "," + timespan;
+    sethash();
     loadJSONP(config[currconfig].url + timespan + ".js", loadData);
     selectbutton(timespan);
 }
@@ -623,13 +631,31 @@ function copyToClip(fldname) {
     document.execCommand("copy");
 }
 
+function findcoin(name) {
+    var confignr;
+    if (/^\d+$/.test(name)) {
+	confignr = name;
+    } else {
+	name = decodeURIComponent(name);
+	confignr = config.findIndex((item) => item.name == name);
+    }
+    if (confignr < 0 || confignr > config.length) {
+	return 0;
+    }
+    return confignr
+}
+
 function main() {
     var hashconfig = 0;
     var hashtimespan = "24h";
+    var hashfeelevel = -1;
     if (location.hash.length > 0) {
         var args = location.hash.substring(1).split(",");
-        if (args.length == 2) {
-            hashconfig = args[0];
+	if (args.length >= 3) {
+	    hashfeelevel = args[2];
+	}
+        if (args.length >= 2) {
+            hashconfig = findcoin(args[0]);
             hashtimespan = args[1];
         } else if (args[0].length > 0) {
             hashtimespan = args[0];
@@ -666,5 +692,8 @@ function main() {
         div.appendChild(btn);
     }
     setconfig(hashconfig);
+    if (hashfeelevel >= 0) {
+	feelevel = hashfeelevel;
+    }
     button(hashtimespan);
 }
