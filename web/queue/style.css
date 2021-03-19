@@ -75,6 +75,7 @@ div.button {
     display: inline-block;
     position: relative;
     margin: 1ex 1em;
+    font-size: 13px;
 }
 .qrcontainer {
     display: inline-block;
