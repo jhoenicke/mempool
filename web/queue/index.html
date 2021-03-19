@@ -24,10 +24,16 @@
     <b>Johoe's Bitcoin Mempool Statistics</b> &ndash;
     <div id="configs" style="display: inline-block;"></div>
     &ndash; <div id="periods" style="display: inline-block;">Period: </div>
+    &ndash; <div id="by" style="display: inline-block;">By: </div>
   </div>
-  <div id="chartContainer1" style="width: 100%; height: 800px; margin-top: 15px;"></div>
-  <div id="chartContainer3" style="width: 100%; height: 800px; margin-top: 15px;"></div>
-  <div id="chartContainer2" style="width: 100%; height: 800px; margin-top: 15px;"></div>
+  <div id="javascriptwarning">
+    This page needs JavaScript to create the graphs and dynamically load the
+    mempool data from the server. 
+    <script type="text/javascript">
+      document.getElementById("javascriptwarning").style.display = "none";
+    </script>
+  </div>
+  <div id="chartContainer" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="tooltip"></div>
   <div>
     <div class="btc"><div class="box"><p><b>Note:</b> this page is <b>not</b> affiliated with any wallet provider

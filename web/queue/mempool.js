@@ -16,8 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var charts;
+var chart;
+var bynames = [ "count", "fee", "weight" ];
+var byindex = [ 0, 2, 1 ];
 var classes = [ "btc", "bch", "ltc", "dash", "doge", "bsv", "eth" ];
+var currentby = 0;
 var config = [
     {"name":"BTC",
      "classname": "btc",
@@ -28,6 +31,7 @@ var config = [
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
+     "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
      "colors": [
@@ -48,6 +52,7 @@ var config = [
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 0,
+     "lastfeelevel": 0,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
      "colors": [
@@ -68,6 +73,7 @@ var config = [
      "priceunit":"Gwei",
      "satPerUnit": 1000000000.0,
      "feelevel": 16,
+     "lastfeelevel": 16,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
      "colors": [
@@ -88,6 +94,7 @@ var config = [
      "symbol":"BCH",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
+     "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,  13, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 ],
      "colors": [
@@ -108,6 +115,7 @@ var config = [
      "symbol":"BSV",
      "satPerUnit": 100000000.0,
      "feelevel": 2,
+     "lastfeelevel": 2,
      "ranges": [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1, 1.2, 1.4, 1.7, 2, 2.5, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 27, 29, 31, 33, 35, 37 ],
      "colors": [
@@ -128,6 +136,7 @@ var config = [
      "sizeunit":"MB",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
+     "lastfeelevel": 1,
      "ranges": [ 0, .1, .2, .3, .4, .5, .6, .7, .8, 1, 1.2, 1.4, 1.7, 2, 2.5, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000 ],
      "show":   [ 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 45 ],
      "colors": [
@@ -148,6 +157,7 @@ var config = [
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
+     "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30,40, 50, 60, 70, 80,100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 2000, 3000, 5000, 7000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40 ],
      "colors": [
@@ -160,29 +170,6 @@ var config = [
    "#000000"
                 ],
      "inc": true}, 
-/*
-    {"name":"LTC",
-     "classname": "ltc",
-     "title":"Litecoin Core",
-     "url":"https://jochen-hoenicke.de/queue/litecoin/",
-     "sizeunit":"MB",
-     "priceunit":"sat/B",
-     "symbol":"LTC",
-     "satPerUnit": 100000000.0,
-     "feelevel": 0,
-     "ranges": [ 0, 5,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 ],
-     "colors": [
-   "#535154", "#400080", "#5600ac", "#6100c2", "#6c00d8", "#7600ec", "#7f00ff", "#9020ff",
-   "#c040ff", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
-   "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
-   "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
-   //"#800000", "#a00000", "#c00000", "#e00000", "#e02020", //"#e04040", "#e06060",
-//   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
-   "#000000"
-                ],
-     "inc": false},
-*/
     {"name":"DASH",
      "classname": "dash",
      "title":"Dash Core v0.16.1.1 with default memory limit",
@@ -192,6 +179,7 @@ var config = [
      "symbol":"DASH",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
+     "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
      "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
      "colors": [
@@ -215,22 +203,22 @@ var data = [];
 var currconfig = 0;
 var currtimespan;
 
-function units(chart) {
-    switch (chart) {
+function units(idx) {
+    switch (idx) {
     case 0: return "tx";
     case 1: return config[currconfig].sizeunit;
     case 2: return config[currconfig].symbol;
     }
 }
-function scale(chart) {
-    switch (chart) {
+function scale(idx) {
+    switch (idx) {
     case 0: return 1.0;
     case 1: return 1000000.0;
     case 2: return config[currconfig].satPerUnit;
     }
 }
-function title(chart) {
-    switch (chart) {
+function title(idx) {
+    switch (idx) {
     case 0: return "Unconfirmed Transaction Count (Mempool)";
     case 1: return "Mempool Weight in " + config[currconfig].sizeunit;
     case 2: return "Pending Transaction Fee in " + config[currconfig].symbol;
@@ -255,20 +243,20 @@ function loadJSONP(url, callback) {
     document.getElementsByTagName('head')[0].appendChild(script);
 }
 
-function legendClick(idx) {
-    feelevel = idx;
+function legendClick(level) {
+    feelevel = level;
+    config[currconfig].lastfeelevel = level;
     sethash();
-    for (var i = 0; i < 3; i++) {
-        var data = charts[i].getData();
-        data = updateData(data, i);
-        charts[i].setData(data);
-        charts[i].setupGrid();
-        charts[i].draw();
-    }
+    var data = chart.getData();
+    data = updateData(data, byindex[currentby]);
+    chart.setData(data);
+    chart.setupGrid();
+    chart.draw();
 }
 
-function tooltip(dataidx, event, pos, item) {
-    var plot = charts[dataidx];
+function tooltip(event, pos, item) {
+    var dataidx = byindex[currentby];
+    var plot = chart;
     var theData = data[dataidx];
     var unit = units(dataidx);
     var prec = precisions[dataidx];
@@ -341,31 +329,29 @@ function zoomHandler(event, ranges) {
     if (ranges.xaxis.to - ranges.xaxis.from < 60000)
         ranges.xaxis.to = ranges.xaxis.from + 60000
 
-    for (var i = 0; i < charts.length; i++) {
-        var chart = charts[i];
-        var opts = chart.getXAxes()[0].options
+    var opts = chart.getXAxes()[0].options
 
-        opts.min = ranges.xaxis.from;
-        opts.max = ranges.xaxis.to;
-        chart.setupGrid();
-        chart.draw();
-        chart.clearSelection();
-    }
-    var data = charts[0].getData()[0].data;
+    opts.min = ranges.xaxis.from;
+    opts.max = ranges.xaxis.to;
+    chart.setupGrid();
+    chart.draw();
+    chart.clearSelection();
+
+    var data = chart.getData()[0].data;
     var ival = data[1][0] - data[0][0]
     if (ival > 90000) {
         loadRange(opts.min, opts.max, zoomData);
     }
 }
 
-function drawTitle(plot, cvs, title) {
+function drawTitle(plot, cvs) {
     if (!plot) { return; }
     var cvsWidth = plot.width() / 2;
 
     cvs.font = "bold 16px Open Sans";
     cvs.fillStyle = "#000";
     cvs.textAlign = 'center';
-    cvs.fillText(title, cvsWidth, 20);
+    cvs.fillText(title(byindex[currentby]), cvsWidth, 20);
     return cvs;
 }
 
@@ -415,12 +401,12 @@ function updateData(plotdata, dataidx) {
     return plotdata;
 }
 
-function convertData(raw, dataidx, unit) {
+function convertData(data, dataidx, unit) {
     var show = config[currconfig].show;
     var priceunit = config[currconfig].priceunit;
     var converted = [];
     var j;
-    var theData = storeData(raw, dataidx, unit);
+    var theData = data[dataidx];
     for (j = 0; j < show.length; j++) {
         var name = config[currconfig].ranges[show[j]];
         var legend =
@@ -444,7 +430,10 @@ function convertData(raw, dataidx, unit) {
 }
 
 function showChart(raw, dataidx, container, unit) {
-    var converted = convertData(raw, dataidx, unit);
+    for (var i = 0; i < 3; i++) {
+	storeData(raw, i, scale(i));
+    }
+    var converted = convertData(data, dataidx, unit);
     var chartconfig = {
         series: {
             stack: 1,
@@ -470,10 +459,10 @@ function showChart(raw, dataidx, container, unit) {
     };
     var plot = $.plot("#"+container, converted, chartconfig);
     plot.hooks.drawOverlay.push( function(plot, cvs) {
-        drawTitle(plot, cvs, title(dataidx));
+        drawTitle(plot, cvs);
     });
     $(plot.getPlaceholder()).bind("plothover", function (event, pos, item) {
-        tooltip(dataidx, event, pos, item);
+        tooltip(event, pos, item);
     });
     $(plot.getPlaceholder()).bind("plotselected", zoomHandler);
     return plot;
@@ -481,10 +470,8 @@ function showChart(raw, dataidx, container, unit) {
 
 
 function showMempool(rawdata) {
-    charts = [];
-    for (var i = 0; i < 3; i++) {
-        charts.push(showChart(rawdata, i, "chartContainer"+(i+1), scale(i)));
-    }
+    var idx = byindex[currentby];
+    chart = showChart(rawdata, idx, "chartContainer", scale(idx));
     reloadInterval = 300000;
     reloader = update;
     if (reloadInterval > 0) {
@@ -494,41 +481,34 @@ function showMempool(rawdata) {
 
 function zoomData(rawdata) {
     for (var i = 0; i < 3; i++) {
-        storeData(rawdata, i, scale(i));
-        charts[i].setData(updateData(charts[i].getData(), i));
+	storeData(rawdata, i, scale(i));
     }
-    for (var i = 0; i < 3; i++) {
-        var chart = charts[i];
-        chart.setupGrid();
-        chart.draw();
-    }
+    chart.setData(updateData(chart.getData(), byindex[currentby]));
+    chart.setupGrid();
+    chart.draw();
 }
 
 var oldconfig;
 function loadData(rawdata) {
-    if (!charts) {
+    if (!chart) {
         showMempool(rawdata);
         oldconfig = currconfig;
     } else {
+	var idx = byindex[currentby];
+	for (var i = 0; i < 3; i++) {
+	    storeData(rawdata, i, scale(i));
+	}
         if (currconfig != oldconfig) {
-            for (var i = 0; i < 3; i++) {
-                charts[i].setData(convertData(rawdata, i, scale(i)));
-            }
+            chart.setData(convertData(data, idx, scale(idx)));
             oldconfig = currconfig;
         } else {
-            for (var i = 0; i < 3; i++) {
-                storeData(rawdata, i, scale(i));
-                charts[i].setData(updateData(charts[i].getData(), i));
-            }
+            chart.setData(updateData(chart.getData(), idx));
         }
-        for (var i = 0; i < 3; i++) {
-            var chart = charts[i];
-            var opts = chart.getXAxes()[0].options
-            opts.min = null;
-            opts.max = null;
-            chart.setupGrid();
-            chart.draw();
-        }
+        var opts = chart.getXAxes()[0].options
+        opts.min = null;
+        opts.max = null;
+        chart.setupGrid();
+        chart.draw();
         if (reloading) {
             clearTimeout(reloading);
         }
@@ -555,7 +535,7 @@ function setconfig(cfg) {
     for (let el of document.getElementsByClassName(config[currconfig].classname)) {
 	el.style.display = 'inline';
     }
-    feelevel = config[currconfig].feelevel;
+    feelevel = config[currconfig].lastfeelevel;
 }
 
 function selectbutton(timespan) {
@@ -580,13 +560,12 @@ function loadRange(from, to, func) {
 }
 
 function update() {
-    loadRange(charts[0].getAxes().xaxis.max+1000, Date.now()+600000, function(rawdata) {
-        for (var i = 0; i < 3; i++) {
-            addData(rawdata, i, scale(i));
-            charts[i].setData(updateData(charts[i].getData(), i));
-            charts[i].setupGrid();
-            charts[i].draw();
-        }
+    loadRange(chart.getAxes().xaxis.max+1000, Date.now()+600000, function(rawdata) {
+	var idx = byindex[currentby];
+	addData(rawdata, idx, scale(idx));
+        chart.setData(updateData(chart.getData(), idx));
+        chart.setupGrid();
+        chart.draw();
         reloading = setTimeout(reloader, reloadInterval);
     });
 }
@@ -597,7 +576,7 @@ function sethash() {
 	optfeelevel = "," +
 	    config[currconfig].ranges[config[currconfig].show[feelevel]];
     }
-    location.hash = "#" + config[currconfig].name + "," + currtimespan + optfeelevel;
+    location.hash = "#" + config[currconfig].name + "," + currtimespan + "," + bynames[currentby] + optfeelevel;
 }
 
 function button(timespan) {
@@ -628,23 +607,53 @@ function findcoin(name) {
     return confignr
 }
 
+function clickby(pos) {
+    for (i = 0; i < bynames.length; i++) {
+        if (i == pos) {
+            document.getElementById("by"+i).classList.add("selected");
+        } else {
+            document.getElementById("by"+i).classList.remove("selected");
+        }
+    }
+    currentby = pos;
+    if (chart) {
+	chart.setData(updateData(chart.getData(), byindex[currentby]));
+	chart.setupGrid();
+	chart.draw();
+    }
+    sethash();
+}
+
 function main() {
     var hashconfig = 0;
     var hashtimespan = "24h";
     var hashfeelevel = -1;
+    var hashby = 2;
     if (location.hash.length > 0) {
         var args = location.hash.substring(1).split(",");
-	if (args.length >= 3) {
-	    hashfeelevel = args[2];
+	var argindex = 0;
+	if (argindex + 1 < args.length) {
+	    hashconfig = findcoin(args[argindex]);
+	    argindex++;
 	}
-        if (args.length >= 2) {
-            hashconfig = findcoin(args[0]);
-            hashtimespan = args[1];
-        } else if (args[0].length > 0) {
-            hashtimespan = args[0];
-        }
+	if (argindex < args.length) {
+	    hashtimespan = args[argindex];
+	    argindex++;
+	}
+	if (argindex < args.length) {
+	    hashby = bynames.findIndex((item) => item == args[argindex]);
+	    if (hashby >= 0 && hashby < bynames.length) {
+		argindex++;
+	    } else {
+		hashby = 2;
+	    }
+	}
+	if (argindex < args.length) {
+	    hashfeelevel = args[argindex];
+	    argindex++;
+	}
     }
-    var divconfig = document.getElementById("configs");
+    var div = document.getElementById("configs");
     for (var i = 0; i < config.length; i++) {
         var name = config[i].name;
         var title = config[i].title;
@@ -659,10 +668,10 @@ function main() {
         })();
         btn.className = "lnk";
         btn.id = "cfg"+i;
-        divconfig.appendChild(document.createTextNode("\u200b"));
-        divconfig.appendChild(btn);
+        div.appendChild(document.createTextNode("\u200b"));
+        div.appendChild(btn);
     }
-    var div = document.getElementById("periods");
+    div = document.getElementById("periods");
     var onclickfun = function(e) { button(e.target.text); };
     for (var i = 0; i < periods.length; i++) {
         var name = periods[i];
@@ -674,6 +683,20 @@ function main() {
         div.appendChild(document.createTextNode("\u200b"));
         div.appendChild(btn);
     }
+    div = document.getElementById("by");
+    for (var i = 0; i < bynames.length; i++) {
+        var name = bynames[i];
+        var btn = document.createElement("a");
+        btn.text = name;
+        (function() {
+            var cfg = i;
+            btn.onclick = function(e) { clickby(cfg); }
+        })();
+        btn.className = "lnk";
+        btn.id = "by"+i;
+        div.appendChild(document.createTextNode("\u200b"));
+        div.appendChild(btn);
+    }
     setconfig(hashconfig);
     if (hashfeelevel >= 0) {
 	feelevel = config[currconfig].show.findIndex(show => config[currconfig].ranges[show] >= hashfeelevel);
@@ -681,5 +704,7 @@ function main() {
 	    feelevel = config[currconfig].feelevel;
 	}
     }
+    currentby = hashby;
+    document.getElementById("by"+currentby).classList.add("selected");
     button(hashtimespan);
 }
