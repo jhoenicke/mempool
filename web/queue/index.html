@@ -30,20 +30,26 @@
   <div id="chartContainer2" style="width: 100%; height: 800px; margin-top: 15px;"></div>
   <div id="tooltip"></div>
   <div>
+    <div class="btc"><div class="box"><p><b>Note:</b> this page is <b>not</b> affiliated with any wallet provider
+    or any mining scheme.  If you are referred by such a company to this site
+    because you did not receive a payment from them, please note: payments in the mempool
+    that do not pay enough fee should still appear in your wallet and on block
+    explorers.  The exception is that the service payed so litte that its payments
+    were removed from the pool or that the service ran into the chain limit.
+    A service whose job is to do BTC payments should know how to avoid the pitfalls
+    and just pay enough fee to get the transaction quickly confirmed (charging a
+    higher fee from the user if necessary).
+    </p></div></div>
     <p>
       This page displays the number and size of the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. It gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch bsv doge ltc dash">amount of fee they pay per (virtual) byte</span><span class="eth">gas price they pay</span>.  The data is generated from my full node and is updated every minute.  Note that in decentralized cryptocurrencies there is no global transaction mempool; every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
       The idea is based on the retired service bitcoinqueue.com.
     </p>
-    <p>The data is separated into different fee levels <span class="btc bch bsv doge ltc dash">given in satoshi per bytes</span><span class="eth">corresponding to the gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  The bottom-most chart shows the same statistics but uses the total transaction <span class="btc bch bsv doge ltc dash">size</dspan><span class="eth">gas limit</span> instead of the number of transactions as the y axis.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are <span class="btc bch bsv doge ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.</p>
-
+    <p>The data is separated into different fee levels <span class="btc bch bsv doge ltc dash">given in satoshi per bytes</span><span class="eth">corresponding to the gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions paying this amount of fee are not confirmed during this time, because there are higher paying transactions that take precedence.  The bottom-most chart shows the same statistics but uses the total transaction <span class="btc bch bsv doge ltc dash">size</span><span class="eth">gas limit</span> instead of the number of transactions as the y axis.  If a stripe on the bottom chart is much bigger than on the top chart, the transactions are <span class="btc bch bsv doge ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.</p>
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
+    <div class="btc ltc"><p>Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p></div>
 
-<p class="btc ltc">Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the lower diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction.  In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
+  <div class="eth"><p>Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p></div>
 
-  <p class="eth">Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p>
-
-  <p class="doge">Note that many servers on the dogecoin network are overloaded.
-  This can result in bad block or transaction propagation.  You can clearly see periods where my server did not receive any blocks for an hour, because none of the peers was able to send it. </p>
    </span>
 
    <h2>Donation Address (please choose currency on top of the page)</h2>

@@ -22,27 +22,9 @@ var config = [
     {"name":"BTC",
      "classname": "btc",
      "title":"Bitcoin Core 0.21.0.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
-/*
-     "url":"https://jochen-hoenicke.de/queue/",
-     "sizeunit":"MB",
-     "priceunit":"sat/B",
-     "symbol":"BTC",
-     "satPerUnit": 100000000.0,
-     "feelevel": 1,
-     "ranges": [ 0,1,2,5,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1400,2000,3000,5000,7000,10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 17, 18, 20, 23, 25, 27, 29, 31 ],
-     "colors": [
-   "#535154", "#0000ac", "#0000ff", "#8080ff",
-   "#00c000", "#00e000", "#90e090", 
-   "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
-   "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
-   "#800080", "#000000",
-     ],
-     "inc": false},
-*/
      "url":"https://johoe.jochen-hoenicke.de/queue/",
-     "sizeunit":"MB",
-     "priceunit":"sat/B",
+     "sizeunit":"vMB",
+     "priceunit":"sat/vB",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -61,8 +43,8 @@ var config = [
      "classname": "btc",
      "title":"Bitcoin Core 0.21.0 with default mempool settings (300 MB + 14 days timeout).",
      "url":"https://core.jochen-hoenicke.de/queue/",
-     "sizeunit":"MB",
-     "priceunit":"sat/B",
+     "sizeunit":"vMB",
+     "priceunit":"sat/vB",
      "symbol":"BTC",
      "satPerUnit": 100000000.0,
      "feelevel": 0,
@@ -161,8 +143,8 @@ var config = [
      "classname": "ltc",
      "title":"Litecoin Core with higher memory limit.",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
-     "sizeunit":"MB",
-     "priceunit":"lit/B",
+     "sizeunit":"vMB",
+     "priceunit":"lit/vB",
      "symbol":"LTC",
      "satPerUnit": 100000000.0,
      "feelevel": 1,
@@ -250,7 +232,7 @@ function scale(chart) {
 function title(chart) {
     switch (chart) {
     case 0: return "Unconfirmed Transaction Count (Mempool)";
-    case 1: return "Mempool Size in " + config[currconfig].sizeunit;
+    case 1: return "Mempool Weight in " + config[currconfig].sizeunit;
     case 2: return "Pending Transaction Fee in " + config[currconfig].symbol;
     }
 }

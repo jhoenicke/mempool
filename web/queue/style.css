@@ -1,6 +1,5 @@
 body {
     font-family: "Helvetica", "Arial", sans-serif;
-    font-size: 13px;
 }
 a {
     text-decoration: none;
@@ -94,4 +93,16 @@ div.button {
 
 .bolt {
     margin-bottom: 2ex;
+}
+
+p {
+    max-width: 65em;
+    margin: 1.5ex auto;
+}
+
+.box {
+    background: lightgray;
+    max-width: 60em;
+    margin: .5ex auto;
+    padding: .1ex 1em;
 }
