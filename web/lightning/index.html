@@ -31,13 +31,13 @@
 </div>
 <div id="setamount" class="tabcontent">
    Pay for server time <span class="footnotebox"><a href="#" onclick="toggle('footnote1')">[*]</a><span id="footnote1" class="footnote" style="display:none;">
-   Server cost is 48 €/month.<br/>
-   So one day costs 1.60 €.
+   Server cost is 90 €/month.<br/>
+   So one day costs 3 €.
 </span></span>:
-   <input type="button" value="1 hour" onclick="setvalue(.07, 'EUR')" />
-   <input type="button" value="1 day" onclick="setvalue(1.60, 'EUR')" />
-   <input type="button" value="1 week" onclick="setvalue(11.20, 'EUR')" />
-   <input type="button" value="1 month" onclick="setvalue(48.00, 'EUR')" /><br/>
+   <input type="button" value="1 hour" onclick="setvalue(.13, 'EUR')" />
+   <input type="button" value="1 day" onclick="setvalue(3.00, 'EUR')" />
+   <input type="button" value="1 week" onclick="setvalue(21.00, 'EUR')" />
+   <input type="button" value="1 month" onclick="setvalue(90.00, 'EUR')" /><br/>
    <p>Amount: <input type="number" id="value" value="" onchange="updateValue()" style="text-align:right;" />
      <select id="unit" value="sat" onchange="updateValue()">
        <option value="sat">sat</option>
@@ -58,7 +58,7 @@
   var valueinsat = 0;
   var border = 4;
   var scale = 4;
-  var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@37.221.198.57:9735";
+  var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@88.198.39.205:9735";
   var qruri = qrcodegen.QrCode.encodeText(uri, qrcodegen.QrCode.Ecc.MEDIUM);
   qruri.drawCanvas(scale, border, document.getElementById("qrnode"));
   document.getElementById("textnode").value = uri;
