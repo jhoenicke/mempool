@@ -31,8 +31,12 @@ def parse_txdata(obj):
         else:
             asize = size
             afees = fee
-        dsize = obj["descendantsize"]
-        dfees = obj["descendantfees"]
+        if "descendantsize" in obj:
+            dsize = obj["descendantsize"]
+            dfees = obj["descendantfees"]
+        else:
+            dsize = size
+            dfees = fee
 
         afpb = afees / asize  # ancestor fee (includes current)
         fpb = fee / size      # current fee
