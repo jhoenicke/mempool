@@ -24,7 +24,10 @@ def parse_txdata(obj):
             size = obj["vsize"]
         else:
             size = obj["size"]
-        fee = int(obj["fee"]*100000000)
+        if "fees" in obj:
+            fee = int(obj["fees"]["base"] * 100000000)
+        else:
+            fee = int(obj["fee"]*100000000)
         if "ancestorsize" in obj:
             asize = obj["ancestorsize"]
             afees = obj["ancestorfees"]
