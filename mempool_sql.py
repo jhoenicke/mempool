@@ -19,7 +19,7 @@ found = False
 
 def parse_txdata(obj):
     global sizes, count, fees, found
-    if "fee" in obj:
+    if "fee" in obj or "fees" in obj:
         if "vsize" in obj:
             size = obj["vsize"]
         else:
