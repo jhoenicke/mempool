@@ -34,8 +34,10 @@ webinterface won't work.
     mysql_secure_installation
     mysql -u root -p <<EOF
     create database btc_mempool;
-    grant all privileges on btc_mempool.* TO 'mempool'@'localhost' identified by '<secret password>';
-    grant select on btc_mempool.* TO 'www'@'localhost' identified by '<redacted>';
+    create user 'mempool'@'localhost' identified by '<secret password>';
+    create user 'www'@'localhost' identified by '<redacted>';
+    grant all privileges on btc_mempool.* TO 'mempool'@'localhost';
+    grant select on btc_mempool.* TO 'www'@'localhost';
     EOF
     cat > ~/.my.cnf <<EOF
     [client]
