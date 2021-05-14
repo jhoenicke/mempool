@@ -19,7 +19,8 @@ updatefile() {
   MINUTES=$2
   IVAL=$3
   if [ `expr $MINUTE % $IVAL` -eq "0" ]; then
-    (echo 'call(['; tail -n +3 $DESTDIR/$NAME.js | head -n -1; echo "$LINE"; echo '])') > $DESTDIR/$NAME.js.new
+    LINES=`expr $MINUTES / $IVAL - 1`
+    (echo 'call(['; grep '^\[' $DESTDIR/$NAME.js | tail -n $LINES; echo "$LINE"; echo '])') > $DESTDIR/$NAME.js.new
     mv $DESTDIR/$NAME.js.new $DESTDIR/$NAME.js
   fi
 }
