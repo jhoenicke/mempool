@@ -1,0 +1,8 @@
+{
+  "callback": "https://johoe.jochen-hoenicke.de/lnd/lnurl.py",
+  "maxSendable": 4000000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Johoe's Mempool\"],[\"text/identifier\",\"mempool@jhoenicke.de\"]]",
+  "commentAllowed": 400,
+  "tag": "payRequest"
+}

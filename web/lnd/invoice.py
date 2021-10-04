@@ -49,7 +49,7 @@ def main():
     print("Content-Type: application/json; charset=UTF-8")
     print("")
     print('{"r_hash":"%s","payment_request":"%s","add_index":%d}'
-          % (binascii.hexlify(invoice.r_hash),
+          % (str(binascii.hexlify(invoice.r_hash),"ascii"),
              invoice.payment_request, invoice.add_index))
 
 

@@ -1,13 +1,18 @@
-import rpc_pb2 as ln
-import rpc_pb2_grpc as lnrpc
-import grpc
-import re
+#!/usr/bin/python3
+
+import cgi
 import os
 import sys
 import codecs
 import binascii
+import hashlib
+import grpc
+import rpc_pb2 as ln
+import rpc_pb2_grpc as lnrpc
 
-def main():
+metadata="[[\"text/plain\",\"Johoe's Mempool\"],[\"text/identifier\",\"mempool@jhoenicke.de\"]]";
+
+def connect():
     # Due to updated ECDSA generated tls.cert we need to let gprc know that
     # we need to use that cipher suite otherwise there will be a handshake
     # error when we communicate with the lnd rpc server.
@@ -20,7 +25,7 @@ def main():
         macaroon_bytes = f.read()
         macaroon = codecs.encode(macaroon_bytes, 'hex')
 
-    def metadata_callback(context, callback):
+    def metadata_callback(_context, callback):
         # for more info see grpc docs
         callback([('macaroon', macaroon)], None)
 
@@ -35,12 +40,20 @@ def main():
     # finally pass in the combined credentials when creating a channel
     channel = grpc.secure_channel('localhost:10009', combined_creds)
     stub = lnrpc.LightningStub(channel)
+    return stub
 
-    invoice = stub.AddInvoice(ln.Invoice(memo="Donation for Johoe's Mempool"))
+def main():
+    stub = connect()
+    form = cgi.FieldStorage()
+    value = int(form["amount"].value) if "amount" in form.keys() else 0
+    memo = (" - " + form["comment"].value) if "comment" in form.keys() else ""
+    memo = f"Johoe's Mempool{memo}"
+    descr_hash = hashlib.sha256(metadata.encode('utf-8')).digest()
+
+    invoice = stub.AddInvoice(ln.Invoice(memo=memo, value_msat=value, description_hash=descr_hash))
     print("Content-Type: application/json; charset=UTF-8")
     print("")
-    print('{"r_hash":"%s","payment_request":"%s","add_index":%d}' % (str(binascii.hexlify(invoice.r_hash),"ascii"),invoice.payment_request,invoice.add_index))
-
+    print(f'{{"pr":"{invoice.payment_request}","routes":[]}}')
 
 debug = False
 #debug = True
@@ -48,7 +61,7 @@ if debug:
     sys.stderr = sys.stdout
 try:
     main()
-except:
+except Exception:
     import traceback
     print("Status: 500 Internal Error")
     print("Content-Type: text/html; charset=UTF-8")
@@ -58,3 +71,5 @@ except:
         print("<pre>")
         traceback.print_exc()
         print("</pre>")
+    else:
+        traceback.print_exc()
