@@ -66,7 +66,7 @@ var config = [
      "inc": true},
     {"name":"ETH",
      "classname":"eth",
-     "title":"geth 1.10.8 with 150k slots",
+     "title":"geth 1.10.10 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth/",
      "symbol":"ETH",
      "sizeunit":"Mgas",
@@ -127,6 +127,7 @@ var config = [
 //   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000" ],
      "inc": true},
+/*
     {"name":"BSV",
      "classname": "bsv",
      "title":"Bitcoin SV 1.0.8",
@@ -147,7 +148,7 @@ var config = [
    //"#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
              ],
-      "inc": true},
+      "inc": true},*/
     {"name":"DOGE",
      "classname": "doge",
      "title":"Dogecoin 1.14.3",
