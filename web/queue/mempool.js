@@ -24,7 +24,7 @@ var currentby = 0;
 var config = [
     {"name":"BTC",
      "classname": "btc",
-     "title":"Bitcoin Core 0.21.1.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
+     "title":"Bitcoin Core 22.0.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
      "url":"https://johoe.jochen-hoenicke.de/queue/",
      "sizeunit":"vMB",
      "priceunit":"sat/vB",
