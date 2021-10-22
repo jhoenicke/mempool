@@ -59,9 +59,8 @@
     <p>You can click on some fee level in the legend to hide all fee levels below that level.  This way you can better see how many transactions are competing with that fee level.</p>
     <p><span class="btc ltc">Note that sizes include the segwit discount, i.e., the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  So for the BTC and LTC chains, a block will always take at most 1 MB from the mempool, even if it is bigger than 1&nbsp;MB, because the weight diagram already shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee level for a transaction. </span>In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
 
-  <div class="eth"><p>Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p></div>
-
-   </span>
+    <div class="eth"><p>Note that transactions that are dependent on lower fee transactions are put in the lower fee stripe.  The top-most fee stripes contain only the transactions that pay the highest gas price and can be mined, so miners will usually choose these transactions first.</p></div>
+ </div>
 
    <h2>Donation Address (please choose currency on top of the page)</h2>
     <div class="centered">
@@ -115,7 +114,6 @@
         <input type="text" id="ethaddress" size="40" value="0xC6F9a38C4B0269Deef360aeD2852b7D22b6297d9" style="border: none;" readonly />
 	<a id="copyaddressbutton" href="javascript:copyToClip('ethaddress');" title="Copy address to clipboard"><sup>copy</sup></a>
 <span id="linkIcon" class="btn-icon__inner far fa-copy"></span>
-</a>
       </div>
       </div>
     </div>
@@ -123,4 +121,5 @@
         Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br/>
         © 2016-2021 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
     </div>
+  </body>
 </html>
