@@ -78,6 +78,7 @@ div.button {
     font-size: 13px;
 }
 .qrcontainer {
+    vertical-align: middle;
     display: inline-block;
     position: relative;
     margin: 1ex 3em;
@@ -92,7 +93,7 @@ div.button {
     transform: translate(-50%, -50%);
 }
 .lnbutton {
-    vertical-align:14px;
+    vertical-align: middle;
 }
 
 .bolt {
