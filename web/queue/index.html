@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
     <title>Johoe's Bitcoin Mempool Size Statistics</title>
-    <script src="../flot/jquery.min.js"></script>
-    <script src="../flot/jquery.flot.min.js"></script>
-    <script src="../flot/jquery.flot.time.min.js"></script>
-    <script src="../flot/jquery.flot.stack.min.js"></script>
-    <script src="../flot/jquery.flot.resize.min.js"></script>
-    <script src="../flot/jquery.flot.selection.min.js"></script>
-    <script src="../flot/jquery.flot.navigate.min.js"></script>
+    <script src="flot/jquery.min.js"></script>
+    <script src="flot/jquery.flot.min.js"></script>
+    <script src="flot/jquery.flot.time.min.js"></script>
+    <script src="flot/jquery.flot.stack.min.js"></script>
+    <script src="flot/jquery.flot.resize.min.js"></script>
+    <script src="flot/jquery.flot.selection.min.js"></script>
+    <script src="flot/jquery.flot.navigate.min.js"></script>
     <script src="mempool.js?v=2.0.15.2"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -17,6 +17,9 @@
     <meta name="keywords" content="Jochen Hoenicke, Bitcoin, Mempool, Statistics"/>
     <meta name="description" content="Johoe's Bitcoin Mempool Size Statistics"/>
     <meta property="og:image" content="https://jochen-hoenicke.de/queue/mempool-20201126-eth.png"/>
+    <link rel="apple-touch-icon" sizes="192x192" type="image/png" href="mempool-icon-192.png">
+    <link rel="shortcut icon" sizes="192x192" type="image/png" href="mempool-icon-192.png">
+    <link rel="icon" type="image/png" href="mempool-icon-192.png">
     <link href="style.css" rel="stylesheet" type="text/css"/>
 </head>
 <body onLoad="main();">
@@ -64,10 +67,10 @@
     <div class="centered">
       <div class="btc">
       <div class="donation">
-        <a href="bitcoin:bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvbzDp1/wKDQ0XtCgUFvz67XCxj05oV2A8ndT7MXMChsntWhwGC/atX6BwwMIm0KDAxCezdca2AQdBKaoMCgtZbfR4GB2enIDAUGkzUMMxMYbGv/yTgwGBzQenqAgU2/MXgBg86/t90PGEQ8WHIfMKie0N3MwGBXmNnCwKA0X8lIgcEib27qAQbOvX//ODBwOcTVPGCwPv7IDmiN9e5FB4Buu5J1gEFhyr9FQLdtVNmXwKDXd975AdCFWs0MDAqLNV4A3T+p/ZoCsocA7cxIjR7lu34AAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="bc-logo-32x32.png" alt=""/></div></a><a href="#" onClick="window.open('../lightning/','ln','resizeable,height=600,width=500'); return false;"><img class="bolt" src="../lightning/lightning-bolt.png" alt="lightning" /></a><br />
+        <a href="bitcoin:bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvbzDp1/wKDQ0XtCgUFvz67XCxj05oV2A8ndT7MXMChsntWhwGC/atX6BwwMIm0KDAxCezdca2AQdBKaoMCgtZbfR4GB2enIDAUGkzUMMxMYbGv/yTgwGBzQenqAgU2/MXgBg86/t90PGEQ8WHIfMKie0N3MwGBXmNnCwKA0X8lIgcEib27qAQbOvX//ODBwOcTVPGCwPv7IDmiN9e5FB4Buu5J1gEFhyr9FQLdtVNmXwKDXd975AdCFWs0MDAqLNV4A3T+p/ZoCsocA7cxIjR7lu34AAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="bc-logo-32x32.png" alt=""/></div></a><button class="lnbutton" type="button" onClick="window.open('lightning/','ln','resizeable,height=600,width=500'); return false;"><img class="bolt" src="lightning/lightning-bolt.png" alt="" /><br/>create lightning invoice</button><a href="lightning:lnurl1dp68gurn8ghj76ngdajku6trddjjuer99uh8wetvdskkkmn0wahz7mrww4excup0d4jk6ur0dakqhmhnx2"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA1ElEQVQI12NABvare/QfMCisecChwKDXLuK9gEFvX9FqINn2qnsBg0L35g4FBvtVq9Y/YGBQrGhgYNC9+q0zgUEi87JBAoPSVLvXDQxsGnn9DxgUv8xoaGDQrr/2dAED20J5/wQGVvGaIAYGrvNLtjowCEaYOCkwiO3QXwC0MUvrxQMG24kFHw4wKFR9P/2AgbfvYNYCBhG+i6ccGJQOxtonMDBYsS9qYLDfpfRKgUFhnegiBga9lr59CQx62z6zA8m1J0QbGBQa/i0HmrZwqpQDsocAQh9HDNJpTOgAAAAASUVORK5CYII=" alt=""/><img class="qrlogo" src="lnurl-38x38.png" alt=""/></div></a><br />
         bitcoin:<a href="bitcoin:bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj">bc1q5mtttrekmt2lc92q7059kgy9krah7xa7dfrdvj</a><br/>
         (old bitcoin:<a href="bitcoin:32qSSph68dpGcsJissY4xnZKNHVWaL7Eq6">32qSSph68dpGcsJissY4xnZKNHVWaL7Eq6</a>)<br/>
-        or pay with <a href="#" onClick="window.open('../lightning/','ln','resizeable,height=600,width=500'); return false;">lightning</a>, via
+        or pay with <a href="#" onClick="window.open('lightning/','ln','resizeable,height=600,width=500'); return false;">lightning</a>, via
         <a href="lightning:lnurl1dp68gurn8ghj76ngdajku6trddjjuer99uh8wetvdskkkmn0wahz7mrww4excup0d4jk6ur0dakqhmhnx2">lnurl</a>, or to mempool@jhoenicke.de.
       </div>
       </div>
@@ -94,6 +97,7 @@
       <div class="bsv">
       <div class="donation">
         <a href="bitcoinsv:1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7"><div class="qrcontainer"><img class="cover pixelated qrcode" width="148" height="148" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAlAQMAAAD/ULJAAAAABlBMVEX///8AAABVwtN+AAAA00lEQVQI12NABvZNrv0PGBRmrvVQYNDbNH/1Aga9lqvaQHJ9SPcCBoUVrzsUGOxXrVr/gIFB0AxICK1ZFdbAoGFfNEWBge/hiicKDFbpbQEODKqb0xc7MChxxk91YDDb9mLpAQZezwfzFRjk9szVesBgl8rx9QGDwGffaAUGIQ4xHwWgGqtLQJW8KYIODNyfPVgOMLCl6W98wGC7amn9AQYGw6OLDjDYz+ladYBBYYLEIgYGvW2OdkAXNlh7PWDQ6xSMamBQ2HylEOj+WfrbFiB7CACc9kUEyrgWFAAAAABJRU5ErkJggg==" alt=""/><img class="qrlogo" src="bsv-32px.png" alt=""/></div></a><br />
+        paymail:<a href="payto:mempool@jhoenicke.de">mempool@jhoenicke.de</a><br />
 	bitcoinsv:<a href="bitcoinsv:1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7">1FZoGn64ryxXV3c3TQUJYSF1gKesj3CRm7</a><br/>
       </div>
       </div>
