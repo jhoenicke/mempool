@@ -1,7 +1,7 @@
 # Bitcoin Mempool Statistics
 
 This is the code to create the mempool statistics for bitcoin that are online
-at https://jochen-hoenicke.de/queue/
+at https://mempool.jhoenicke.de/
 
 ## Installation: Part 1 - Logging
 
