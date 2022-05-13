@@ -466,6 +466,7 @@ function showChart(raw, dataidx, container, unit) {
                 steps: false
             },
         },
+        watermark: { mode: "text", order: "background", position: "c", text: "mempool.jhoenicke.de", font: "40px Arial" },
         selection: { mode: "x" },
         xaxis: { mode: "time", timezone: "browser" },
         legend: { position: "nw", sorted: "reverse",
