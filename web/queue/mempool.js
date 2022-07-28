@@ -66,7 +66,7 @@ var config = [
      "inc": true},
     {"name":"ETH",
      "classname":"eth",
-     "title":"geth 1.10.18 with 150k slots",
+     "title":"geth 1.10.21 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth/",
      "symbol":"ETH",
      "sizeunit":"Mgas",
