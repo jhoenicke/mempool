@@ -11,6 +11,7 @@
     <script src="flot/jquery.flot.navigate.min.js"></script>
     <script src="flot/jquery.flot.watermark.min.js"></script>
     <script src="mempool.js?v=2.0.16"></script>
+    <script src="etherdonate.js?v=1.0.0"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="Content-Language" content="en"/>
@@ -110,12 +111,32 @@
       </div>
       <div class="eth">
       <div class="donation">
+	<div class="sidebyside">
 	<span class="cover pixelated" style="width: 60px;height:60px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAgMAAAC5YVYYAAAACVBMVEWV5Xgyfg0qispl6+N0AAAAH0lEQVQI12NwYGRwdGQIDWVQkWBwEWSYwMagNgMoAgAqGwPVVzuqWQAAAABJRU5ErkJggg==); border-radius: 50%; display: inline-block;">
 	</span><br />
 	ethereum: mempool.jhoenicke.de (ENS)<br />
         <input type="text" id="ethaddress" size="40" value="0xC6F9a38C4B0269Deef360aeD2852b7D22b6297d9" style="border: none;" readonly />
 	<a id="copyaddressbutton" href="javascript:copyToClip('ethaddress');" title="Copy address to clipboard"><sup>copy</sup></a>
 <span id="linkIcon" class="btn-icon__inner far fa-copy"></span>
+        </div>
+        <div id="ethdonate" class="hidden">
+          Network:
+          <select id="ethnetwork" name="network">
+            <option value="0" selected>Choose a network</option>
+            <option value="1">Ethereum Mainnet</option>
+            <option value="10">Optimism</option>
+            <option value="100">Gnosis</option>
+            <option value="137">Polygon</option>
+            <option value="42161">Arbitrum One</option>
+            <option value="5">Görli</option>
+          </select><br/>
+	  Donate <input type="text" id="ethamount" size="10" value="0.002" /> 
+          <select id="ethtoken" name="token">
+          </select><br/>
+          <button id="ethsendbutton" class="lnbutton">Donate with <span id="ethapp">Metamask</span></button><br/>
+          <span id="ethmessage"></span>
+          <script>ethInit();</script>
+        </div>
       </div>
       </div>
     </div>

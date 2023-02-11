@@ -77,6 +77,12 @@ div.button {
     margin: 1ex 1em;
     font-size: 13px;
 }
+.sidebyside {
+    display: inline-block;
+}
+.hidden{
+    display: none;
+}
 .qrcontainer {
     vertical-align: middle;
     display: inline-block;
