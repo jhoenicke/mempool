@@ -33,13 +33,13 @@ var config = [
      "feelevel": 1,
      "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ],
      "colors": [
    "#535154", "#000060", "#000080", "#0000a0", "#0000c0", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
    "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
    "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
-   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
+//   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
              ],
      "inc": true},
@@ -54,13 +54,13 @@ var config = [
      "feelevel": 1,
      "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ],
      "colors": [
    "#535154", "#000060", "#000080", "#0000a0", "#0000c0", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
    "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
    "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
-   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
+//   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
              ],
      "inc": true},
@@ -75,13 +75,13 @@ var config = [
      "feelevel": 9,
      "lastfeelevel": 9,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ],
      "colors": [
    "#535154", "#000040", "#000070", "#0000a0", "#0000d0", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
    "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
    "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
-   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
+//   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
              ],
      "inc": true},
@@ -160,12 +160,12 @@ var config = [
      "feelevel": 0,
      "lastfeelevel": 0,
      "ranges": [ 0, .1, .2, .3, .4, .5, .6, .7, .8, 1, 1.2, 1.4, 1.7, 2, 2.5, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 27, 28, 29, 30, 45 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24, 25, 26, 30, 45 ],
      "colors": [
    "#535154", "#400080", "#5600ac", "#6100c2", "#6c00d8", "#7600ec", "#7f00ff", "#9020ff",
    "#c040ff", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
-   "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
+   "#808000", "#989800", "#b0b000", /*"#c8c800", "#e0e000", "#e0e030",*/ "#e0e060",
 //   "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
 //   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"],
@@ -181,13 +181,13 @@ var config = [
      "feelevel": 1,
      "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30,40, 50, 60, 70, 80,100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 2000, 3000, 5000, 7000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 ],
      "colors": [
    "#535154", "#400080", "#5600ac", "#6100c2", "#6c00d8", "#7600ec", "#7f00ff", "#9020ff",
    "#c040ff", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
-   "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
-   "#800000", "#a00000", "#c00000", "#e00000", "#e02020", //"#e04040", "#e06060",
+   "#808000", "#989800", "#b0b000", "#c8c800",// "#e0e000", "#e0e030", "#e0e060",
+//   "#800000", "#a00000", "#c00000", "#e00000", "#e02020", //"#e04040", "#e06060",
 //   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
                 ],
@@ -203,13 +203,13 @@ var config = [
      "feelevel": 1,
      "lastfeelevel": 1,
      "ranges": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 140, 170, 200, 250, 300, 400, 500, 600, 700, 800, 1000, 1200, 1400, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 10000 ],
-     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37 ],
+     "show":   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ],
      "colors": [
    "#535154", "#0000ac", "#0000c2", "#0000d8", "#0000ec", "#0000ff", "#2c2cff", "#5858ff", "#8080ff",
    "#008000", "#00a000", "#00c000", "#00e000", "#30e030", "#60e060", "#90e090",
    "#808000", "#989800", "#b0b000", "#c8c800", "#e0e000", "#e0e030", "#e0e060",
    "#800000", "#a00000", "#c00000", "#e00000", "#e02020", "#e04040", "#e06060",
-   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
+//   "#800080", "#ac00ac", "#d800d8", "#ff00ff", "#ff2cff", "#ff58ff", "#ff80ff",
    "#000000"
              ],
      "inc": true}
@@ -451,11 +451,11 @@ function convertData(data, dataidx, unit) {
     return converted;
 }
 
-function showChart(raw, dataidx, container, unit) {
-    for (var i = 0; i < 3; i++) {
-	storeData(raw, i, scale(i));
-    }
-    var converted = convertData(data, dataidx, unit);
+function setupChart() {
+    var dataidx = byindex[currentby];
+    var converted = convertData(data, dataidx, scale(dataidx));
+    var legendDiv = document.getElementById("chartLegend");
+    var legendColumns = Math.max(1,Math.floor((legendDiv.clientWidth - 70) / 81));
     var chartconfig = {
         series: {
             stack: 1,
@@ -469,7 +469,7 @@ function showChart(raw, dataidx, container, unit) {
         watermark: { mode: "text", order: "background", position: "ne", text: "mempool.jhoenicke.de", font: "30px Arial" },
         selection: { mode: "x" },
         xaxis: { mode: "time", timezone: "browser" },
-        legend: { position: "nw", sorted: "reverse",
+        legend: { container: legendDiv, sorted: "reverse", noColumns: legendColumns,
                   labelFormatter: function(label, series) {
                       return '<a href="#"'+
                           (series.lines.show ? '': ' class="hide"') +
@@ -480,21 +480,29 @@ function showChart(raw, dataidx, container, unit) {
         grid: { hoverable: true,
                 margin: {top:30} },
     };
-    var plot = $.plot("#"+container, converted, chartconfig);
-    plot.hooks.drawOverlay.push( function(plot, cvs) {
+    chart = $.plot("#chartContainer", converted, chartconfig);
+}
+
+function showChart(raw, dataidx, container, unit) {
+    for (var i = 0; i < 3; i++) {
+	storeData(raw, i, scale(i));
+    }
+    setupChart();
+    window.onresize = setupChart;
+
+    chart.hooks.drawOverlay.push( function(plot, cvs) {
         drawTitle(plot, cvs);
     });
-    $(plot.getPlaceholder()).bind("plothover", function (event, pos, item) {
+    $(chart.getPlaceholder()).bind("plothover", function (event, pos, item) {
         tooltip(event, pos, item);
     });
-    $(plot.getPlaceholder()).bind("plotselected", zoomHandler);
-    return plot;
+    $(chart.getPlaceholder()).bind("plotselected", zoomHandler);
 }
 
 
 function showMempool(rawdata) {
     var idx = byindex[currentby];
-    chart = showChart(rawdata, idx, "chartContainer", scale(idx));
+    showChart(rawdata, idx, "chartContainer", scale(idx));
     reloadInterval = 300000;
     reloader = update;
     if (reloadInterval > 0) {
@@ -647,6 +655,28 @@ function clickby(pos) {
     sethash();
 }
 
+var resizeOffset;
+
+function resizeChart(e) {
+    var newHeight = e.clientY + resizeOffset;
+    if (newHeight > 100 && newHeight < 10000) {
+        document.getElementById("chartContainer").style.height = newHeight + "px";
+    }
+}
+
+function stopResize(e) {
+    document.removeEventListener('mousemove', resizeChart);
+    document.removeEventListener('mouseup', stopResize);
+    return false;
+}
+
+function dragDivider(e) {
+    resizeOffset = document.getElementById("chartContainer").clientHeight - e.clientY;
+    document.addEventListener('mousemove', resizeChart);
+    document.addEventListener('mouseup', stopResize);
+    return false;
+}
+
 function main() {
     var hashconfig = 0;
     var hashtimespan = "24h";
@@ -730,4 +760,5 @@ function main() {
     currentby = hashby;
     document.getElementById("by"+currentby).classList.add("selected");
     button(hashtimespan);
+    document.getElementById("chartDivider").onmousedown=dragDivider;
 }
