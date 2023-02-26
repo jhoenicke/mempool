@@ -481,6 +481,9 @@ function setupChart() {
                 margin: {top:30} },
     };
     chart = $.plot("#chartContainer", converted, chartconfig);
+    chart.hooks.drawOverlay.push( function(plot, cvs) {
+        drawTitle(plot, cvs);
+    });
 }
 
 function showChart(raw, dataidx, container, unit) {
@@ -489,10 +492,6 @@ function showChart(raw, dataidx, container, unit) {
     }
     setupChart();
     window.onresize = setupChart;
-
-    chart.hooks.drawOverlay.push( function(plot, cvs) {
-        drawTitle(plot, cvs);
-    });
     $(chart.getPlaceholder()).bind("plothover", function (event, pos, item) {
         tooltip(event, pos, item);
     });
@@ -662,6 +661,7 @@ function resizeChart(e) {
     if (newHeight > 100 && newHeight < 10000) {
         document.getElementById("chartContainer").style.height = newHeight + "px";
     }
+    return false;
 }
 
 function resizeChartTouch(e) {
@@ -669,6 +669,7 @@ function resizeChartTouch(e) {
     if (newHeight > 100 && newHeight < 10000) {
         document.getElementById("chartContainer").style.height = newHeight + "px";
     }
+    return false;
 }
 
 function stopResize(e) {
