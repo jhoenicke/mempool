@@ -664,6 +664,13 @@ function resizeChart(e) {
     }
 }
 
+function resizeChartTouch(e) {
+    var newHeight = e.touches.item(0).clientY + resizeOffset;
+    if (newHeight > 100 && newHeight < 10000) {
+        document.getElementById("chartContainer").style.height = newHeight + "px";
+    }
+}
+
 function stopResize(e) {
     document.removeEventListener('mousemove', resizeChart);
     document.removeEventListener('mouseup', stopResize);
@@ -674,6 +681,19 @@ function dragDivider(e) {
     resizeOffset = document.getElementById("chartContainer").clientHeight - e.clientY;
     document.addEventListener('mousemove', resizeChart);
     document.addEventListener('mouseup', stopResize);
+    return false;
+}
+
+function stopTouch(e) {
+    document.removeEventListener('touchmove', resizeChartTouch);
+    document.removeEventListener('touchend', stopTouch);
+    return false;
+}
+
+function touchDivider(e) {
+    resizeOffset = document.getElementById("chartContainer").clientHeight - e.touches.item(0).clientY;
+    document.addEventListener('touchmove', resizeChartTouch);
+    document.addEventListener('touchend', stopTouch);
     return false;
 }
 
@@ -760,5 +780,6 @@ function main() {
     currentby = hashby;
     document.getElementById("by"+currentby).classList.add("selected");
     button(hashtimespan);
-    document.getElementById("chartDivider").onmousedown=dragDivider;
+    document.getElementById("chartDivider").onmousedown = dragDivider;
+    document.getElementById("chartDivider").ontouchstart = touchDivider;
 }

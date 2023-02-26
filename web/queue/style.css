@@ -132,7 +132,7 @@ p {
 
 #chartDivider {
     clear: left;
-    width: 100%;
+    width: calc(100% - 120px);
     text-align: center;
     background: #c0c0c0;
     font-size: 8px;
@@ -147,5 +147,10 @@ p {
     #chartLegend {
         width: 100%;
         float: none;
+    }
+    #chartDivider {
+        width: 100%;
+        font-size: 14px;
+        padding: 0 .7em;
     }
 }
