@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import decimal
 import sys
 import time
 from subprocess import PIPE, Popen
@@ -80,7 +81,7 @@ def dump_data(timestamp, sizes, count, fees):
 def main():
     global sizes, count, fees, found
     timestamp = int(time.time())
-    json.load(sys.stdin, object_hook=parse_txdata)
+    json.load(sys.stdin, object_hook=parse_txdata, parse_float=decimal.Decimal)
     if found:
         dump_data(timestamp, sizes, count, fees)
 
