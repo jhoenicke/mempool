@@ -48,17 +48,23 @@
      </select></p>
    <p style="text-align:right;"> =
      <span id="btcvalue">0</span> BTC
-     (<span id="factor">1</span> <span id="unit2">BTC</span>/BTC).</p>
+     (<span id="factor">1</span> <span
+     id="unit2">BTC</span>/BTC)<br/>
+     <span id="rateack" style="visibility: hidden">Rate provided by <a
+     href="https://www.coingecko.com">CoinGecko</a></span></p>
    <p>Memo: <input type="text" id="memo" size="30" value="Donation for Johoe's mempool" /></p>
    <input type="button" value="Get invoice" onclick="invoice()" />
 </div>
 <script>
+  var priceuri =
+"https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd%2Ceur&precision=2";
   var btceur = 10138;
   var btcusd = 11397;
+  var priceok = false;
   var valueinsat = 0;
   var border = 4;
   var scale = 4;
-  var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@88.198.39.205:9735";
+  var uri = "0358327cb80ab2a8db36a5924c62966c7b4a753045600df594aa3863ecb618cc5d@95.217.32.30:9735";
   var qruri = qrcodegen.QrCode.encodeText(uri, qrcodegen.QrCode.Ecc.MEDIUM);
   qruri.drawCanvas(scale, border, document.getElementById("qrnode"));
   document.getElementById("textnode").value = uri;
@@ -74,15 +80,18 @@
     var value = document.getElementById("value").value;
     var unit = document.getElementById("unit").value;
     var factor = 1.0;
+    var ackvisible = false;
     switch(unit) {
     case "BTC":
       factor = 1.0;
       break;
     case "EUR":
       factor = btceur;
+      ackvisible = priceok;
       break;
     case "USD":
       factor = btcusd;
+      ackvisible = priceok;
       break;
     case "bit":
       factor = 1000000.0;
@@ -96,6 +105,7 @@
 
     document.getElementById("factor").innerHTML = factor;
     document.getElementById("unit2").innerHTML = unit;
+    document.getElementById("rateack").style.visibility = ackvisible ? "visible" : "hidden";
   }
 
   function invoice() {
@@ -177,8 +187,9 @@
   xhttpbtc.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       var response = JSON.parse(this.responseText);
-      btcusd = response.bpi.USD.rate_float;
-      btceur = response.bpi.EUR.rate_float;
+      btcusd = response.bitcoin.usd;
+      btceur = response.bitcoin.eur;
+      priceok = true;
       updateValue();
     }
   }
@@ -189,7 +200,7 @@
     }
     document.getElementById("memo").value = "Donation for " + donationfor;
     requestInvoice(0, "Donation to " + donationfor);
-    xhttpbtc.open("GET", "https://api.coindesk.com/v1/bpi/currentprice.json", true);
+    xhttpbtc.open("GET", priceuri, true);
     xhttpbtc.send();
     updateValue();
   }
