@@ -24,6 +24,10 @@ a {
     text-align: center;
 }
 
+#donbox {
+    min-height: 236px;
+}
+
 .header {
     font-size: 14px;
     text-align: center;

@@ -24,6 +24,7 @@ var currentby = 0;
 var config = [
     {"name":"BTC",
      "classname": "btc",
+     "donatebutton": true,
      "title":"Bitcoin Core 24.0.1.  Huge mempool limit and no timeout, to prevent any transactions to be dropped.",
      "url":"https://johoe.jochen-hoenicke.de/queue/",
      "sizeunit":"vMB",
@@ -66,6 +67,7 @@ var config = [
      "inc": true},
     {"name":"ETH",
      "classname":"eth",
+     "donatebutton": true,
      "title":"geth 1.11.5 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth/",
      "symbol":"ETH",
@@ -108,6 +110,7 @@ var config = [
      "inc": true},*/
     {"name":"BCH",
      "classname": "bch",
+     "donatebutton": true,
      "title":"Bitcoin Cash - BCHN 26.0.0.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
      "sizeunit":"MB",
@@ -130,6 +133,7 @@ var config = [
 /*
     {"name":"BSV",
      "classname": "bsv",
+     "donatebutton": true,
      "title":"Bitcoin SV 1.0.8",
      "url":"https://speed.jochen-hoenicke.de/bsv/",
      "sizeunit":"MB",
@@ -151,6 +155,7 @@ var config = [
       "inc": true},*/
     {"name":"DOGE",
      "classname": "doge",
+     "donatebutton": true,
      "title":"Dogecoin 1.14.5",
      "url":"https://johoe.jochen-hoenicke.de/queue/doge/",
      "symbol":"DOGE",
@@ -172,6 +177,7 @@ var config = [
      "inc": true},
     {"name":"LTC",
      "classname": "ltc",
+     "donatebutton": true,
      "title":"Litecoin Core 0.21.2.2",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
      "sizeunit":"vMB",
@@ -194,6 +200,7 @@ var config = [
      "inc": true}, 
     {"name":"DASH",
      "classname": "dash",
+     "donatebutton": true,
      "title":"Dash Core v19.0.0 with default memory limit",
      "url":"https://johoe.jochen-hoenicke.de/queue/dash/",
      "sizeunit":"MB",
@@ -548,6 +555,21 @@ function loadData(rawdata) {
     }
 }
 
+function setdonate(cfg) {
+    for (i = 0; i < config.length; i++) {
+        if (i == cfg) {
+            document.getElementById("don"+i).classList.add("selected");
+        } else if (config[i].donatebutton) {
+            document.getElementById("don"+i).classList.remove("selected");
+        }
+    }
+    for (i = 0; i < classes.length; i++) {
+	for (let el of document.getElementsByClassName("do"+classes[i])) {
+	    el.style.display = classes[i] == config[cfg].classname ? 'inline' : 'none';
+	}
+    }
+}
+
 function setconfig(cfg) {
     for (i = 0; i < config.length; i++) {
         if (i == cfg) {
@@ -559,13 +581,11 @@ function setconfig(cfg) {
     currconfig = cfg;
     for (i = 0; i < classes.length; i++) {
 	for (let el of document.getElementsByClassName(classes[i])) {
-	    el.style.display = 'none';
+	    el.style.display = classes[i] == config[cfg].classname ? 'inline' : 'none';
 	}
     }
-    for (let el of document.getElementsByClassName(config[currconfig].classname)) {
-	el.style.display = 'inline';
-    }
     feelevel = config[currconfig].lastfeelevel;
+    setdonate(cfg);
 }
 
 function selectbutton(timespan) {
@@ -698,6 +718,24 @@ function touchDivider(e) {
     return false;
 }
 
+function createCoinButton(idx, donateButton) {
+    var name = config[idx].name;
+    var title = config[idx].title;
+    var btn = document.createElement("a");
+    btn.text = name;
+    if (title) {
+        btn.title = title;
+    }
+    if (donateButton) {
+        btn.onclick = function(e) { setdonate(idx); }
+    } else {
+        btn.onclick = function(e) { setconfig(idx); button(currtimespan); }
+    }
+    btn.className = "lnk";
+    btn.id = (donateButton ? "don" : "cfg")+idx;
+    return btn;
+}
+
 function main() {
     var hashconfig = 0;
     var hashtimespan = "24h";
@@ -727,23 +765,15 @@ function main() {
 	    argindex++;
 	}
     }
-    var div = document.getElementById("configs");
+    var divcoins = document.getElementById("configs");
+    var divdonate = document.getElementById("donatecoins");
     for (var i = 0; i < config.length; i++) {
-        var name = config[i].name;
-        var title = config[i].title;
-        var btn = document.createElement("a");
-        btn.text = name;
-        if (title) {
-            btn.title = title;
+        divcoins.appendChild(document.createTextNode("\u200b"));
+        divcoins.appendChild(createCoinButton(i, false));
+        if (config[i]["donatebutton"]) {
+            divdonate.appendChild(document.createTextNode("\u200b"));
+            divdonate.appendChild(createCoinButton(i, true));
         }
-        (function() {
-            var cfg = i;
-            btn.onclick = function(e) { setconfig(cfg); button(currtimespan); }
-        })();
-        btn.className = "lnk";
-        btn.id = "cfg"+i;
-        div.appendChild(document.createTextNode("\u200b"));
-        div.appendChild(btn);
     }
     div = document.getElementById("periods");
     var onclickfun = function(e) { button(e.target.text); };
