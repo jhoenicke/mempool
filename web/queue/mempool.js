@@ -19,7 +19,7 @@
 var chart;
 var bynames = [ "count", "fee", "weight" ];
 var byindex = [ 0, 2, 1 ];
-var classes = [ "btc", "bch", "ltc", "dash", "doge", "bsv", "eth" ];
+var classes = [ "btc", "bch", "ltc", "dash", "doge", "eth" ];
 var currentby = 0;
 var config = [
     {"name":"BTC",
@@ -555,19 +555,14 @@ function loadData(rawdata) {
     }
 }
 
-function setdonate(cfg) {
-    for (i = 0; i < config.length; i++) {
-        if (i == cfg) {
-            document.getElementById("don"+i).classList.add("selected");
-        } else if (config[i].donatebutton) {
-            document.getElementById("don"+i).classList.remove("selected");
-        }
-    }
+function setdonate(coin) {
     for (i = 0; i < classes.length; i++) {
+        document.getElementById("don"+classes[i]).classList.remove("selected");
 	for (let el of document.getElementsByClassName("do"+classes[i])) {
-	    el.style.display = classes[i] == config[cfg].classname ? 'inline' : 'none';
+	    el.style.display = classes[i] == coin ? 'inline' : 'none';
 	}
     }
+    document.getElementById("don"+coin).classList.add("selected");
 }
 
 function setconfig(cfg) {
@@ -585,7 +580,7 @@ function setconfig(cfg) {
 	}
     }
     feelevel = config[currconfig].lastfeelevel;
-    setdonate(cfg);
+    setdonate(config[currconfig].classname);
 }
 
 function selectbutton(timespan) {
@@ -727,12 +722,12 @@ function createCoinButton(idx, donateButton) {
         btn.title = title;
     }
     if (donateButton) {
-        btn.onclick = function(e) { setdonate(idx); }
+        btn.onclick = function(e) { setdonate(config[idx].classname); }
     } else {
         btn.onclick = function(e) { setconfig(idx); button(currtimespan); }
     }
     btn.className = "lnk";
-    btn.id = (donateButton ? "don" : "cfg")+idx;
+    btn.id = (donateButton ? "don" + config[idx].classname : "cfg" + idx);
     return btn;
 }
 
