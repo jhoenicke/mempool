@@ -575,9 +575,15 @@ function setconfig(cfg) {
     }
     currconfig = cfg;
     for (i = 0; i < classes.length; i++) {
+        if (classes[i] == config[cfg].classname) {
+            continue;
+        }
 	for (let el of document.getElementsByClassName(classes[i])) {
-	    el.style.display = classes[i] == config[cfg].classname ? 'inline' : 'none';
+	    el.style.display = 'none';
 	}
+    }
+    for (let el of document.getElementsByClassName(config[cfg].classname)) {
+        el.style.display = 'inline';
     }
     feelevel = config[currconfig].lastfeelevel;
     setdonate(config[currconfig].classname);
