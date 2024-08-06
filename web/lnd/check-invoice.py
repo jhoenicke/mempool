@@ -4,8 +4,8 @@ import sys
 import codecs
 import time
 import grpc
-import rpc_pb2 as ln
-import rpc_pb2_grpc as lnrpc
+import lightning_pb2 as ln
+import lightning_pb2_grpc as lnrpc
 
 def connect():
     # Due to updated ECDSA generated tls.cert we need to let gprc know that

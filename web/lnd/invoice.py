@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
-import cgi
 import os
 import sys
 import codecs
 import binascii
 import grpc
-import rpc_pb2 as ln
-import rpc_pb2_grpc as lnrpc
+import lightning_pb2 as ln
+import lightning_pb2_grpc as lnrpc
+from urllib.parse import parse_qs
 
 def connect():
     # Due to updated ECDSA generated tls.cert we need to let gprc know that
@@ -41,9 +41,9 @@ def connect():
 
 def main():
     stub = connect()
-    form = cgi.FieldStorage()
-    value = int(form["value"].value) if "value" in form.keys() else 0
-    memo = form["memo"].value if "memo" in form.keys() else ""
+    form = parse_qs(os.environ['QUERY_STRING'])
+    value = int(form["value"][0]) if "value" in form.keys() else 0
+    memo = form["memo"][0] if "memo" in form.keys() else ""
 
     invoice = stub.AddInvoice(ln.Invoice(memo=memo, value=value))
     print("Content-Type: application/json; charset=UTF-8")
