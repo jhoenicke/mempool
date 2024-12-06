@@ -1,6 +1,6 @@
 /*
     Bitcoin Mempool Visualization
-    Copyright (C) 2017  Jochen Hoenicke
+    Copyright (C) 2017-2024  Jochen Hoenicke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -68,7 +68,7 @@ var config = [
     {"name":"ETH",
      "classname":"eth",
      "donatebutton": true,
-     "title":"geth 1.14.7 with 150k slots",
+     "title":"geth 1.14.12 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth/",
      "symbol":"ETH",
      "sizeunit":"Mgas",
