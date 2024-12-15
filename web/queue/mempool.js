@@ -156,7 +156,7 @@ var config = [
     {"name":"DOGE",
      "classname": "doge",
      "donatebutton": true,
-     "title":"Dogecoin 1.14.6",
+     "title":"Dogecoin 1.14.9",
      "url":"https://johoe.jochen-hoenicke.de/queue/doge/",
      "symbol":"DOGE",
      "priceunit":"DOGE/kB",
