@@ -67,6 +67,38 @@ const ethNetworks = {
         ],
         blockExplorerUrls: ["https://explorer.arbitrum.io/"]
     },
+    8453: {
+        chainId: "0x2105",
+        rpcUrls: ["https://mainnet.base.org/"],
+        chainName: "Base",
+        tokens: [
+            {
+                token: 0,
+                symbol: "ETH",
+                cgid: "ethereum",
+                decimals: 18
+            },
+            {
+                token: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+                symbol: "USDT",
+                cgid: "usd",
+                decimals: 6,
+            },
+            {
+                token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                symbol: "USDC",
+                cgid: "usd",
+                decimals: 6,
+            },
+            {
+                token: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+                symbol: "DAI",
+                cgid: "usd",
+                decimals: 18,
+            },
+        ],
+        blockExplorerUrls: ["https://basescan.org/"]
+    },
     10: {
         chainId: "0xa",
         chainName: "Optimism",
@@ -142,26 +174,6 @@ const ethNetworks = {
             },
         ],
         blockExplorerUrls: ["https://polygonscan.com/"]
-    },
-    5: {
-        chainId: "0x5",
-        rpcUrls: ["https://goerli.blockpi.network/v1/rpc/public"],
-        chainName: "Görli Testnet",
-        tokens: [
-            {
-                token: 0,
-                symbol: "goETH",
-                cgid: "ethereum",
-                decimals: 18
-            },
-            {
-                token: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
-                symbol: "DAI",
-                cgid: "usd",
-                decimals: 18,
-            },
-        ],
-        blockExplorerUrls: ["https://goerli.etherscan.io/"]
     },
 };
 
