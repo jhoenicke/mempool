@@ -90,7 +90,7 @@ var config = [
     {"name":"BCH",
      "classname": "bch",
      "donatebutton": true,
-     "title":"Bitcoin Cash - BCHN 27.1.0.",
+     "title":"Bitcoin Cash - BCHN 28.0.1.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
      "sizeunit":"MB",
      "priceunit":"sat/B",
