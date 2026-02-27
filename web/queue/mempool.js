@@ -70,7 +70,7 @@ var config = [
     {"name":"ETH",
      "classname":"eth",
      "donatebutton": true,
-     "title":"geth 1.16.7 + nimbus 25.11.1 with 150k slots",
+     "title":"geth 1.17.0 + nimbus 26.2.1 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth4/",
      "symbol":"ETH",
      "sizeunit":"Mgas",
