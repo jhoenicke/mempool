@@ -1,0 +1,59 @@
+/* ECharts proof-of-concept styles - mobile-first */
+* { box-sizing: border-box; }
+body {
+    font-family: "Open Sans", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 8px;
+    color: #222;
+    -webkit-text-size-adjust: 100%;
+}
+.header {
+    font-size: 15px;
+    line-height: 1.9;
+    margin-bottom: 6px;
+}
+.chart-container {
+    width: 100%;
+    height: 60vh;
+    min-height: 320px;
+}
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    margin: 8px 0;
+    font-size: 12px;
+}
+.lnk, .legenditem {
+    cursor: pointer;
+    color: #0050a0;
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 6px;          /* generous touch targets for mobile */
+    border-radius: 4px;
+    display: inline-block;
+}
+.lnk:hover, .legenditem:hover { background: #eef2f7; }
+.lnk.selected {
+    background: #0050a0;
+    color: #fff;
+    font-weight: bold;
+}
+.legenditem .swatch {
+    display: inline-block;
+    width: 11px; height: 11px;
+    margin-right: 4px;
+    vertical-align: -1px;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+.legenditem.hide { opacity: 0.4; text-decoration: line-through; }
+.note {
+    font-size: 13px;
+    color: #555;
+    max-width: 720px;
+    line-height: 1.5;
+}
+@media (max-width: 600px) {
+    .header { font-size: 14px; }
+    .chart-container { height: 55vh; }
+}
