@@ -16,14 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     ----------------------------------------------------------------------
-    This is a PROOF OF CONCEPT that re-implements the Flot-based chart on
-    top of Apache ECharts.  It reuses the exact data model and transforms
-    of the original mempool.js so it renders the live production feed.
-    It demonstrates the parts that needed evaluating before committing to
-    ECharts: stacked area, mobile touch zoom (dataZoom), a custom tooltip
-    with cumulative per-band sums, the "feelevel" legend interaction
-    (click a band -> hide everything below it), and zoom-to-reload of
-    higher-resolution data via db.php.
+    PROOF OF CONCEPT: the Flot chart re-implemented on Apache ECharts.
+
+    Data model (the part this PoC is exploring):
+      * The full-history "all" feed is loaded once and kept as a coarse
+        backdrop (allData).  All zooming and panning happens instantly on
+        this in-memory data -- no network round-trip during the gesture.
+      * Only when the zoom has been stable for ~1s do we fetch higher
+        resolution data for the visible window from db.php (fineData).
+      * If a later gesture leaves the fine window, we instantly fall back
+        to the coarse backdrop so zoom-out stays smooth, then re-settle.
+      * The view is always anchored to absolute timestamps, so swapping the
+        underlying data never makes the visible window jump.
+
+    The static per-period files (2h.js ... all.js) remain the production
+    fast path; here we only use all.js (backdrop) + db.php (detail).
 */
 
 var chart;                       // the ECharts instance
@@ -76,18 +83,28 @@ var config = [
      "inc": true}
 ];
 var periods = ["2h", "8h", "24h", "2d", "4d", "1w", "2w", "30d", "3m", "6m", "1y", "all"];
+var periodMs = {                 // window width per period button, null = full history
+    "2h": 7.2e6, "8h": 2.88e7, "24h": 8.64e7, "2d": 1.728e8, "4d": 3.456e8,
+    "1w": 6.048e8, "2w": 1.2096e9, "30d": 2.592e9, "3m": 7.776e9,
+    "6m": 1.5552e10, "1y": 3.1536e10, "all": null
+};
 
-var reloader;
-var reloadInterval = 0;
-var reloading;
 var precisions = [ 0, 3, 3];
 var feelevel = 0;
-var data = [];                   // data[dataidx][bandidx] = [ [t, value], ... ]
 var currconfig = 0;
 var currtimespan = "24h";
-var zoomWindow = null;           // {from,to} in ms while the user is zoomed in; null = full view
+
+/* ----- layered data ----- */
+var allData = null;              // coarse full-history backdrop, from all.js
+var allInc = 1440;               // sampling interval of allData, in minutes
+var data = [];                   // currently displayed structured data (allData or fine)
+var fineRange = null;            // {from,to} of the loaded fine data, or null when showing allData
+var baseFrom = 0;                // first timestamp available in allData (ms)
 var programmaticZoom = false;    // guard so our own zoom updates don't re-trigger the handler
-var baseFrom, baseTo;            // full extent of the selected period; zoom never loads beyond this
+var settleTimer, reloadTimer;
+
+function nowMs() { return Date.now(); }
+function baseTo() { return nowMs(); }   // right clamp: allow fetching up to the present
 
 /* ----- units / scale / title, identical semantics to the original ----- */
 function units(idx) {
@@ -126,44 +143,59 @@ function loadJSONP(url, callback) {
     document.getElementsByTagName('head')[0].appendChild(script);
 }
 
-/* ----- data transforms, ported verbatim from mempool.js ----- */
-function addData(raw, dataidx, unit) {
+/* ----- data transforms (same logic as the original addData) ----- */
+// Sum the raw per-feerate values that fall into displayed band j, for the
+// given dataidx (0=count,1=size,2=fee).
+function bandAmount(rawRow, dataidx, bandj) {
     var show = config[currconfig].show;
-    for (i = 0; i < raw.length; i++) {
-        for (j = 0; j < show.length; j++) {
-            function get(array, index) {
-                if (index >= array.length) {
-                    return 0;
-                } else {
-                    if (config[currconfig].inc || index == array.length - 1) {
-                        return array[index];
-                    } else {
-                        return array[index] - array[index + 1];
-                    }
-                }
+    var ranges = config[currconfig].ranges;
+    var arr = rawRow[dataidx + 1];
+    function get(array, index) {
+        if (index >= array.length) { return 0; }
+        if (config[currconfig].inc || index == array.length - 1) { return array[index]; }
+        return array[index] - array[index + 1];
+    }
+    var hi = bandj == show.length - 1 ? ranges.length : show[bandj + 1];
+    var amount = 0;
+    for (var k = show[bandj]; k < hi; k++) { amount += get(arr, k); }
+    return amount;
+}
+
+// Build a fresh structured dataset out[dataidx][band] = [ [tMs,value], ... ].
+function buildStructured(raw) {
+    var show = config[currconfig].show;
+    var out = [];
+    for (var d = 0; d < 3; d++) {
+        out[d] = [];
+        for (var j = 0; j < show.length; j++) { out[d][j] = []; }
+    }
+    for (var i = 0; i < raw.length; i++) {
+        var t = raw[i][0] * 1000;
+        for (var d = 0; d < 3; d++) {
+            var unit = scale(d);
+            for (var j = 0; j < show.length; j++) {
+                out[d][j].push([t, bandAmount(raw[i], d, j) / unit]);
             }
-            var amount = 0;
-            for (k = show[j]; k < (j == show.length - 1 ? config[currconfig].ranges.length : show[j + 1]); k++) {
-                amount = amount + get(raw[i][dataidx+1],k);
-            }
-            data[dataidx][j].push([raw[i][0]*1000, amount/unit]);
         }
     }
-    return data[dataidx];
+    return out;
 }
 
-function storeData(raw, dataidx, unit) {
-    data[dataidx] = [];
-    for (j = 0; j <= config[currconfig].show.length; j++) {
-        data[dataidx][j] = [];
+// Append raw rows onto an existing structured dataset (used for the live tail).
+function appendStructured(target, raw) {
+    var show = config[currconfig].show;
+    for (var i = 0; i < raw.length; i++) {
+        var t = raw[i][0] * 1000;
+        for (var d = 0; d < 3; d++) {
+            var unit = scale(d);
+            for (var j = 0; j < show.length; j++) {
+                target[d][j].push([t, bandAmount(raw[i], d, j) / unit]);
+            }
+        }
     }
-    return addData(raw, dataidx, unit);
 }
 
-/* ----- ECharts series construction ----- */
-// Build one ECharts area series per visible fee band.  Bands below the
-// chosen feelevel are stacked but rendered empty, mirroring the original
-// updateData()/convertData() behaviour.
+/* ----- ECharts series / tooltip / option ----- */
 function buildSeries() {
     var dataidx = byindex[currentby];
     var theData = data[dataidx];
@@ -186,23 +218,26 @@ function buildSeries() {
             lineStyle: { width: visible ? 0.5 : 0, color: color },
             areaStyle: visible ? { color: color, opacity: 0.66 } : { opacity: 0 },
             emphasis: { disabled: true },
-            // bands below feelevel contribute 0 to the stack
             data: visible ? theData[j] : theData[j].map(function(p){ return [p[0], 0]; })
         });
     }
     return series;
 }
 
-// The cumulative-sum tooltip: for the hovered time, show every band from
-// the top down with the running total, like the original Flot tooltip.
 function tooltipFormatter(params) {
     if (!params.length) { return ""; }
     var dataidx = byindex[currentby];
     var prec = precisions[dataidx];
     var unit = units(dataidx);
     var show = config[currconfig].show;
-    var xIndex = params[0].dataIndex;
     var theData = data[dataidx];
+    if (!theData || !theData[0] || !theData[0].length) { return ""; }
+    // The axis pointer can report an index past the end (e.g. the pinned
+    // window extends beyond the data, or the data was just swapped between the
+    // backdrop and a fine fetch), so clamp it to a valid point.
+    var xIndex = params[0].dataIndex;
+    if (xIndex == null || xIndex < 0) { xIndex = 0; }
+    if (xIndex >= theData[0].length) { xIndex = theData[0].length - 1; }
     var time = echarts.format.formatTime("MMM dd, hh:mm", theData[0][xIndex][0]);
     var str = "<strong>" + time + "</strong><table style='border-collapse:collapse'>";
     var sum = 0;
@@ -234,16 +269,8 @@ function baseOption() {
             textStyle: { fontSize: 12 }
         },
         grid: { left: 60, right: 20, top: 40, bottom: 70 },
-        xAxis: {
-            type: "time",
-            axisLabel: { hideOverlap: true }
-        },
-        yAxis: {
-            type: "value",
-            name: units(byindex[currentby]),
-            scale: false
-        },
-        // dataZoom gives us pinch/drag zoom on mobile and a slider on desktop.
+        xAxis: { type: "time", axisLabel: { hideOverlap: true } },
+        yAxis: { type: "value", name: units(byindex[currentby]), scale: false },
         dataZoom: [
             { type: "inside", filterMode: "none" },
             { type: "slider", filterMode: "none", height: 22, bottom: 18 }
@@ -256,7 +283,6 @@ function baseOption() {
     };
 }
 
-/* ----- chart lifecycle ----- */
 function setupChart() {
     if (!chart) {
         chart = echarts.init(document.getElementById("chartContainer"), null, { renderer: "canvas" });
@@ -265,8 +291,7 @@ function setupChart() {
     chart.setOption(baseOption(), { notMerge: true });
 }
 
-// Re-render only the series + title + y-axis (used when toggling by/feelevel
-// without reloading data).
+// Re-render series + title + y-axis without touching the zoom window.
 function refreshChart() {
     chart.setOption({
         title: { text: title(byindex[currentby]) },
@@ -275,113 +300,167 @@ function refreshChart() {
     });
 }
 
-function loadData(rawdata) {
-    for (var i = 0; i < 3; i++) {
-        storeData(rawdata, i, scale(i));
-    }
-    // Remember the full period extent: zooming never loads outside it (use the
-    // period buttons for a wider range), so we never churn-reload at its edges.
-    var s0 = data[byindex[currentby]][0];
-    baseFrom = s0[0][0];
-    baseTo = s0[s0.length - 1][0];
-    setupChart();
-    if (reloading) { clearTimeout(reloading); }
-    reloadInterval = 300000;
-    reloader = update;
-    reloading = setTimeout(reloader, reloadInterval);
-}
-
-function update() {
-    var theData = data[byindex[currentby]];
-    var lastT = theData[0][theData[0].length - 1][0];
-    loadRange(lastT + 1000, Date.now() + 600000, function(rawdata) {
-        for (var i = 0; i < 3; i++) {
-            addData(rawdata, i, scale(i));
-        }
-        refreshChart();
-        // keep the user's absolute window after appending fresh data
-        if (zoomWindow) { pinZoom(zoomWindow.from, zoomWindow.to); }
-        reloading = setTimeout(reloader, reloadInterval);
-    });
-}
-
-/* ----- zoom -> reload higher resolution, like the original zoomHandler ----- */
-function loadRange(from, to, func) {
-    var increment = Math.floor((to - from) / 60000000);
-    if (increment < 1) { increment = 1; }
-    loadJSONP(config[currconfig].url +
-              "db.php?s=" + Math.floor(from/1000) +
-              "&e=" + Math.floor(to/1000) +
-              "&i=" + increment, func);
-}
-
-// The currently visible [from,to] window in absolute ms.
+/* ----- zoom helpers ----- */
 function getWindow() {
     var axis = chart.getModel().getComponent("xAxis").axis;
     var extent = axis.scale.getExtent();   // [minMs, maxMs] currently shown
     return { from: extent[0], to: extent[1] };
 }
 
-// Pin the view to an absolute time window (NOT a percentage), so it survives
-// a data reload that changes the underlying time span.
+// Pin the view to an absolute time window so it survives a data swap.
 function pinZoom(from, to) {
     programmaticZoom = true;
     chart.dispatchAction({ type: "dataZoom", startValue: from, endValue: to });
 }
 
-// Choose a sampling increment (in whole minutes, as db.php expects) for a
-// given visible window width, aiming for a few hundred points across it.
+// Sampling interval, in whole minutes, that suits a window of the given width.
 function incrementFor(spanMs) {
-    var inc = Math.floor(spanMs / 60000000);   // same formula as the original loadRange
+    var inc = Math.floor(spanMs / 60000000);   // ~ aim for a few hundred points across the window
     return inc < 1 ? 1 : inc;
 }
 
-// Reload data for the visible window [visFrom,visTo], expanded by a margin on
-// each side (clamped to the period) so there is room to zoom/pan back out,
-// then re-anchor the view to the window the user is actually looking at.
-function loadViewport(visFrom, visTo) {
-    var span = visTo - visFrom;
-    var inc = incrementFor(span);
-    var margin = span * 0.5;
-    var from = Math.max(baseFrom, visFrom - margin);
-    var to = Math.min(baseTo, visTo + margin);
-    loadJSONP(config[currconfig].url +
-              "db.php?s=" + Math.floor(from/1000) +
-              "&e=" + Math.floor(to/1000) +
-              "&i=" + inc, function(rawdata) {
-        for (var i = 0; i < 3; i++) {
-            storeData(rawdata, i, scale(i));
-        }
-        refreshChart();
-        pinZoom(visFrom, visTo);   // keep the user's window after swapping data
+// Interval (minutes) of whatever data is currently displayed.
+function currentInc() {
+    var s = data[byindex[currentby]][0];
+    return s.length < 2 ? allInc : (s[1][0] - s[0][0]) / 60000;
+}
+
+/* ----- display source switching ----- */
+function showAll() {
+    data = allData;
+    fineRange = null;
+}
+
+/* ----- loading ----- */
+// Load the coarse full-history backdrop once per coin.
+function loadAllData(cb) {
+    loadJSONP(config[currconfig].url + "all.js", function(raw) {
+        allData = buildStructured(raw);
+        var s0 = allData[0][0];
+        baseFrom = s0[0][0];
+        allInc = s0.length < 2 ? 1440 : (s0[1][0] - s0[0][0]) / 60000;
+        data = allData;
+        fineRange = null;
+        if (cb) { cb(); }
     });
 }
 
-var zoomDebounce;
+// Fetch higher-resolution data for the visible window (plus margin) and show it.
+function loadFine(visFrom, visTo) {
+    var span = visTo - visFrom;
+    var inc = incrementFor(span);
+    var margin = span * 0.5;
+    var qfrom = Math.max(baseFrom, visFrom - margin);
+    var qto = Math.min(baseTo(), visTo + margin);
+    loadJSONP(config[currconfig].url +
+              "db.php?s=" + Math.floor(qfrom/1000) +
+              "&e=" + Math.floor(qto/1000) +
+              "&i=" + inc, function(raw) {
+        if (!raw || !raw.length) { return; }
+        data = buildStructured(raw);
+        fineRange = { from: qfrom, to: qto };
+        refreshChart();
+        pinZoom(visFrom, visTo);
+    });
+}
+
+/* ----- the settle / coverage logic ----- */
+// Called continuously while the user zooms/pans.  Keeps the gesture smooth
+// (instant fallback to the backdrop) and schedules a reload once it stops.
 function onDataZoom() {
     if (programmaticZoom) { programmaticZoom = false; return; }
-    clearTimeout(zoomDebounce);
-    zoomDebounce = setTimeout(function() {
-        var w = getWindow();
-        var series0 = data[byindex[currentby]][0];
-        if (series0.length < 2) { return; }
-        var dataFrom = series0[0][0], dataTo = series0[series0.length - 1][0];
-        var span = w.to - w.from;
-        // track the absolute window so auto-reload can keep it (null = full period)
-        zoomWindow = span < (baseTo - baseFrom) * 0.999 ? w : null;
+    var w = getWindow();
+    // If we drifted outside the loaded fine window, fall back to the coarse
+    // backdrop immediately so zoom-out / pan never hits an empty edge.
+    if (fineRange && (w.from < fineRange.from || w.to > fineRange.to)) {
+        showAll();
+        refreshChart();
+        pinZoom(w.from, w.to);
+    }
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(onSettle, 1000);   // only reload when the zoom holds ~1s
+}
 
-        var loadedInc = (series0[1][0] - series0[0][0]) / 60000;   // current resolution, minutes
-        var idealInc = incrementFor(span);
-        // resolution far from ideal -> we zoomed in (need finer) or out (need coarser)
-        var resoMismatch = loadedInc > idealInc * 1.8 || loadedInc < idealInc / 1.8;
-        // visible edge approaching the loaded data edge, and more data exists in the period
-        var nearLeft  = (w.from - dataFrom) < span * 0.15 && dataFrom > baseFrom + 1000;
-        var nearRight = (dataTo - w.to)     < span * 0.15 && dataTo   < baseTo   - 1000;
+function onSettle() {
+    if (!chart) { return; }
+    var w = getWindow();
+    var ideal = incrementFor(w.to - w.from);    // minutes the window wants
+    if (ideal >= allInc * 0.8) {
+        // wide enough that the coarse backdrop already suffices
+        if (fineRange) { showAll(); refreshChart(); pinZoom(w.from, w.to); }
+        return;
+    }
+    // need finer data; skip if the current fine data already covers it well
+    if (fineRange && w.from >= fineRange.from && w.to <= fineRange.to &&
+        currentInc() <= ideal * 1.8) {
+        return;
+    }
+    loadFine(w.from, w.to);
+}
 
-        if (resoMismatch || nearLeft || nearRight) {
-            loadViewport(w.from, w.to);
-        }
-    }, 250);
+/* ----- live refresh: keep the present edge current when zoomed in ----- */
+function scheduleReload() {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(liveRefresh, 60000);
+}
+function liveRefresh() {
+    var w = getWindow();
+    // only meaningful when viewing the present at fine resolution
+    if (fineRange && w.to >= nowMs() - 2 * 60000) {
+        loadFine(w.from, w.to);
+    }
+    scheduleReload();
+}
+
+/* ----- top button bars ----- */
+function selectbutton(timespan) {
+    for (var i = 0; i < periods.length; i++) {
+        var el = document.getElementById("lk" + periods[i]);
+        if (el) { el.classList.toggle("selected", periods[i] == timespan); }
+    }
+}
+
+// Set the visible window to a period, instantly on the backdrop, then settle.
+function setView(timespan) {
+    currtimespan = timespan;
+    sethash();
+    var to = baseTo();
+    var from = periodMs[timespan] != null ? to - periodMs[timespan] : baseFrom;
+    from = Math.max(baseFrom, from);
+    showAll();
+    setupChart();          // creates the chart on first call, full re-render afterwards
+    pinZoom(from, to);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(onSettle, 300);    // explicit intent: fetch detail promptly
+}
+
+function button(timespan) {
+    selectbutton(timespan);
+    setView(timespan);
+}
+
+function selectCoin(cfg) {
+    for (var i = 0; i < config.length; i++) {
+        var el = document.getElementById("cfg" + i);
+        if (el) { el.classList.toggle("selected", i == cfg); }
+    }
+    currconfig = cfg;
+    feelevel = config[currconfig].lastfeelevel;
+    loadAllData(function() {
+        buildLegend();
+        setView(currtimespan);
+        scheduleReload();
+    });
+}
+
+function clickby(pos) {
+    for (var i = 0; i < bynames.length; i++) {
+        var el = document.getElementById("by" + i);
+        if (el) { el.classList.toggle("selected", i == pos); }
+    }
+    currentby = pos;
+    if (chart) { refreshChart(); }
+    sethash();
 }
 
 /* ----- feelevel legend (click a band -> hide everything below it) ----- */
@@ -413,44 +492,7 @@ function legendClick(level) {
     refreshChart();
 }
 
-/* ----- top button bars ----- */
-function setconfig(cfg) {
-    for (var i = 0; i < config.length; i++) {
-        var el = document.getElementById("cfg" + i);
-        if (el) { el.classList.toggle("selected", i == cfg); }
-    }
-    currconfig = cfg;
-    feelevel = config[currconfig].lastfeelevel;
-}
-
-function selectbutton(timespan) {
-    for (var i = 0; i < periods.length; i++) {
-        var el = document.getElementById("lk" + periods[i]);
-        if (el) { el.classList.toggle("selected", periods[i] == timespan); }
-    }
-}
-
-function button(timespan) {
-    currtimespan = timespan;
-    zoomWindow = null;
-    sethash();
-    loadJSONP(config[currconfig].url + timespan + ".js", function(raw){
-        loadData(raw);
-        buildLegend();
-    });
-    selectbutton(timespan);
-}
-
-function clickby(pos) {
-    for (var i = 0; i < bynames.length; i++) {
-        var el = document.getElementById("by" + i);
-        if (el) { el.classList.toggle("selected", i == pos); }
-    }
-    currentby = pos;
-    if (chart) { refreshChart(); }
-    sethash();
-}
-
+/* ----- hash / buttons / bootstrap ----- */
 function sethash() {
     var optfeelevel = "";
     if (feelevel != config[currconfig].feelevel) {
@@ -473,8 +515,7 @@ function main() {
     for (var i = 0; i < config.length; i++) {
         (function(idx){
             divcoins.appendChild(document.createTextNode("​"));
-            divcoins.appendChild(makeButton("cfg" + idx, config[idx].name,
-                function(){ setconfig(idx); button(currtimespan); }));
+            divcoins.appendChild(makeButton("cfg" + idx, config[idx].name, function(){ selectCoin(idx); }));
         })(i);
     }
     var divp = document.getElementById("periods");
@@ -494,8 +535,7 @@ function main() {
 
     window.addEventListener("resize", function(){ if (chart) { chart.resize(); } });
 
-    setconfig(0);
     currentby = 0;
     document.getElementById("by0").classList.add("selected");
-    button("24h");
+    selectCoin(0);
 }
