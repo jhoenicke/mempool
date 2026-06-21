@@ -74,7 +74,8 @@ def dump_data(timestamp, sizes, count, fees):
         logfile.write("[{:d},[{}],[{}],[{}]],\n"
                       .format(timestamp, countstr, sizesstr, feesstr))
     proc = Popen([MYSQL, MYSQLMEMPOOLDB], stdin=PIPE, stdout=PIPE)
-    proc.communicate("INSERT INTO mempool VALUES({:d},{},{},{});\n"
+    # trailing DEFAULT lets the generated `res` column compute itself
+    proc.communicate("INSERT INTO mempool VALUES({:d},{},{},{},DEFAULT);\n"
                      .format(timestamp, countstr, sizesstr, feesstr)
                      .encode("ascii"))
 
