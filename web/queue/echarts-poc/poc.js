@@ -202,41 +202,30 @@ function buildSeries() {
     var theData = data;
     var show = config[currconfig].show;
     var priceunit = config[currconfig].priceunit;
-    var n = (theData[0] && theData[0].length) || 0;
-
-    // Instead of ECharts' built-in stack (separate polygons whose shared edge
-    // gets rasterised a pixel apart on steep falls, leaking white between bands),
-    // draw each band as an opaque area from the baseline up to its CUMULATIVE
-    // top.  Painted topmost-first, a larger band always sits underneath, so any
-    // edge rounding exposes the band below -- never the white background.
-    // Bands below feelevel are simply not summed in, so the stack starts there.
-    var cum = [];                        // cum[j][i] = [t, sum of bands feelevel..j]
-    var acc = new Array(n);
-    for (var j = feelevel; j < show.length; j++) {
-        cum[j] = new Array(n);
-        var src = theData[j];
-        for (var i = 0; i < n; i++) {
-            acc[i] = (j == feelevel ? 0 : acc[i]) + src[i][1];
-            cum[j][i] = [src[i][0], acc[i]];
-        }
-    }
-
     var series = [];
-    for (var b = show.length - 1; b >= feelevel; b--) {   // topmost (largest) area first
-        var name = config[currconfig].ranges[show[b]];
-        var legend = b == show.length - 1 ? (name + "+ " + priceunit)
-                                          : name + "-" + config[currconfig].ranges[show[b+1]];
-        var color = config[currconfig].colors[b];
+    // Bands below feelevel are skipped entirely (not drawn zeroed), so the
+    // native stack starts at the first shown band.
+    for (var j = feelevel; j < show.length; j++) {
+        var name = config[currconfig].ranges[show[j]];
+        var legend = j == show.length - 1 ? (name + "+ " + priceunit)
+                                           : name + "-" + config[currconfig].ranges[show[j+1]];
+        var color = config[currconfig].colors[j];
         var fill = bakeColor(color, 0.66);
         series.push({
-            id: "band" + b,
+            id: "band" + j,
             name: legend,
             type: "line",
+            stack: "total",
+            stackStrategy: "all",
             showSymbol: false,
-            lineStyle: { width: 0.5, color: color },
-            areaStyle: { color: fill, opacity: 1, origin: "start" },
+            // Opaque fill (baked toward white to keep the translucent look) plus a
+            // same-colour stroke on the band's top edge.  The stroke is invisible
+            // against its own fill but paints over the thin white anti-aliasing
+            // seam ECharts leaves between stacked areas on steep falls.
+            lineStyle: { width: 2, color: fill },
+            areaStyle: { color: fill, opacity: 1 },
             emphasis: { disabled: true },
-            data: cum[b]
+            data: theData[j]
         });
     }
     return series;
