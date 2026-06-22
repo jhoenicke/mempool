@@ -95,9 +95,11 @@ var currconfig = 0;
 var currtimespan = "24h";
 
 /* ----- layered data ----- */
-var allData = null;              // coarse full-history backdrop, from all.js
+var allRaw = null;               // raw full-history rows from all.js (kept for metric switches)
+var allData = null;              // coarse backdrop, structured for the current metric: allData[band]=[[t,v],..]
 var allInc = 1440;               // sampling interval of allData, in minutes
-var data = [];                   // currently displayed structured data (allData or fine)
+var fineRaw = null;              // raw rows of the loaded fine window, or null when showing the backdrop
+var data = [];                   // currently displayed structured data for the current metric (allData or fine)
 var fineRange = null;            // {from,to} of the loaded fine data, or null when showing allData
 var baseFrom = 0;                // first timestamp in allData (ms) -- fixed x-axis min
 var baseTo = 0;                  // x-axis max (ms): "now", advanced every 5 min by liveRefresh
@@ -161,64 +163,80 @@ function bandAmount(rawRow, dataidx, bandj) {
     return amount;
 }
 
-// Build a fresh structured dataset out[dataidx][band] = [ [tMs,value], ... ].
-function buildStructured(raw) {
+// Build a fresh structured dataset for ONE metric: out[band] = [ [tMs,value], ... ].
+// Only the currently displayed metric is materialised -- building all three
+// (count/fee/weight) when only one is ever drawn tripled the live memory.
+function buildStructured(raw, dataidx) {
     var show = config[currconfig].show;
+    var unit = scale(dataidx);
     var out = [];
-    for (var d = 0; d < 3; d++) {
-        out[d] = [];
-        for (var j = 0; j < show.length; j++) { out[d][j] = []; }
-    }
+    for (var j = 0; j < show.length; j++) { out[j] = []; }
     for (var i = 0; i < raw.length; i++) {
         var t = raw[i][0] * 1000;
-        for (var d = 0; d < 3; d++) {
-            var unit = scale(d);
-            for (var j = 0; j < show.length; j++) {
-                out[d][j].push([t, bandAmount(raw[i], d, j) / unit]);
-            }
+        for (var j = 0; j < show.length; j++) {
+            out[j].push([t, bandAmount(raw[i], dataidx, j) / unit]);
         }
     }
     return out;
 }
 
-// Append raw rows onto an existing structured dataset (used for the live tail).
-function appendStructured(target, raw) {
-    var show = config[currconfig].show;
-    for (var i = 0; i < raw.length; i++) {
-        var t = raw[i][0] * 1000;
-        for (var d = 0; d < 3; d++) {
-            var unit = scale(d);
-            for (var j = 0; j < show.length; j++) {
-                target[d][j].push([t, bandAmount(raw[i], d, j) / unit]);
-            }
-        }
-    }
+// Structured data for the current metric, from a set of raw rows.
+function structuredFor(raw) {
+    return buildStructured(raw, byindex[currentby]);
 }
 
 /* ----- ECharts series / tooltip / option ----- */
+// Pre-blend a band colour toward white by `alpha` so the area can be painted
+// fully opaque.  Stacked bands never overlap, so a translucent fill only ever
+// blended against the white background anyway -- but opacity<1 leaves thin white
+// anti-aliasing seams between bands, which opaque fills don't.
+function bakeColor(hex, alpha) {
+    var r = parseInt(hex.slice(1, 3), 16),
+        g = parseInt(hex.slice(3, 5), 16),
+        b = parseInt(hex.slice(5, 7), 16);
+    function mix(c) { return Math.round(c * alpha + 255 * (1 - alpha)); }
+    return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
+}
+
 function buildSeries() {
-    var dataidx = byindex[currentby];
-    var theData = data[dataidx];
+    var theData = data;
     var show = config[currconfig].show;
     var priceunit = config[currconfig].priceunit;
+    var n = (theData[0] && theData[0].length) || 0;
+
+    // Instead of ECharts' built-in stack (separate polygons whose shared edge
+    // gets rasterised a pixel apart on steep falls, leaking white between bands),
+    // draw each band as an opaque area from the baseline up to its CUMULATIVE
+    // top.  Painted topmost-first, a larger band always sits underneath, so any
+    // edge rounding exposes the band below -- never the white background.
+    // Bands below feelevel are simply not summed in, so the stack starts there.
+    var cum = [];                        // cum[j][i] = [t, sum of bands feelevel..j]
+    var acc = new Array(n);
+    for (var j = feelevel; j < show.length; j++) {
+        cum[j] = new Array(n);
+        var src = theData[j];
+        for (var i = 0; i < n; i++) {
+            acc[i] = (j == feelevel ? 0 : acc[i]) + src[i][1];
+            cum[j][i] = [src[i][0], acc[i]];
+        }
+    }
+
     var series = [];
-    for (var j = 0; j < show.length; j++) {
-        var name = config[currconfig].ranges[show[j]];
-        var legend = j == show.length - 1 ? (name + "+ " + priceunit)
-                                           : name + "-" + config[currconfig].ranges[show[j+1]];
-        var visible = j >= feelevel;
-        var color = config[currconfig].colors[j];
+    for (var b = show.length - 1; b >= feelevel; b--) {   // topmost (largest) area first
+        var name = config[currconfig].ranges[show[b]];
+        var legend = b == show.length - 1 ? (name + "+ " + priceunit)
+                                          : name + "-" + config[currconfig].ranges[show[b+1]];
+        var color = config[currconfig].colors[b];
+        var fill = bakeColor(color, 0.66);
         series.push({
-            id: "band" + j,
+            id: "band" + b,
             name: legend,
             type: "line",
-            stack: "total",
-            stackStrategy: "all",
             showSymbol: false,
-            lineStyle: { width: visible ? 0.5 : 0, color: color },
-            areaStyle: visible ? { color: color, opacity: 0.66 } : { opacity: 0 },
+            lineStyle: { width: 0.5, color: color },
+            areaStyle: { color: fill, opacity: 1, origin: "start" },
             emphasis: { disabled: true },
-            data: visible ? theData[j] : theData[j].map(function(p){ return [p[0], 0]; })
+            data: cum[b]
         });
     }
     return series;
@@ -230,7 +248,7 @@ function tooltipFormatter(params) {
     var prec = precisions[dataidx];
     var unit = units(dataidx);
     var show = config[currconfig].show;
-    var theData = data[dataidx];
+    var theData = data;
     if (!theData || !theData[0] || !theData[0].length) { return ""; }
     // The axis pointer can report an index past the end (e.g. the pinned
     // window extends beyond the data, or the data was just swapped between the
@@ -243,7 +261,11 @@ function tooltipFormatter(params) {
     var sum = 0;
     for (var i = show.length - 1; i >= 0; i--) {
         if (i < feelevel) { continue; }
-        sum += theData[i][xIndex][1];
+        // theData can briefly lag show/feelevel during a data swap (backdrop<->fine,
+        // metric or coin switch); skip bands that aren't present yet rather than throw.
+        var row = theData[i];
+        if (!row || !row[xIndex]) { continue; }
+        sum += row[xIndex][1];
         var value = config[currconfig].ranges[show[i]];
         var sw = "<span style='display:inline-block;width:9px;height:9px;margin-right:4px;background:" +
                  config[currconfig].colors[i] + "'></span>";
@@ -294,12 +316,20 @@ function setupChart() {
 }
 
 // Re-render series + title + y-axis without touching the zoom window.
+// replaceMerge on 'series' so a higher feelevel (fewer bands) actually drops the
+// now-hidden series instead of leaving them merged in from the previous render.
 function refreshChart() {
     chart.setOption({
         title: { text: title(byindex[currentby]) },
         yAxis: { name: units(byindex[currentby]) },
         series: buildSeries()
-    });
+    }, { replaceMerge: ["series"] });
+}
+
+// Rebuild the displayed data for the current metric from the raw rows we kept.
+function rebuildForMetric() {
+    if (allRaw) { allData = structuredFor(allRaw); }
+    data = fineRaw ? structuredFor(fineRaw) : allData;
 }
 
 /* ----- zoom helpers ----- */
@@ -315,15 +345,24 @@ function pinZoom(from, to) {
     chart.dispatchAction({ type: "dataZoom", startValue: from, endValue: to });
 }
 
+// How many points per band are worth drawing across the current window: never
+// more than the chart can resolve (~1 point/px).  A phone is ~360px wide, so
+// this alone cuts the old fixed ~1440-points-per-band budget several-fold --
+// fewer points means less memory and far less to repaint on every pan/zoom.
+function targetPoints() {
+    var w = (chart && chart.getWidth()) || 800;
+    return Math.min(1000, Math.max(150, Math.round(w)));
+}
+
 // Sampling interval, in whole minutes, that suits a window of the given width.
 function incrementFor(spanMs) {
-    var inc = Math.floor(spanMs / 60000000);   // ~ aim for a few hundred points across the window
+    var inc = Math.floor(spanMs / (targetPoints() * 60000));
     return inc < 1 ? 1 : inc;
 }
 
 // Interval (minutes) of whatever data is currently displayed.
 function currentInc() {
-    var s = data[byindex[currentby]][0];
+    var s = data[0];
     return s.length < 2 ? allInc : (s[1][0] - s[0][0]) / 60000;
 }
 
@@ -331,19 +370,22 @@ function currentInc() {
 function showAll() {
     data = allData;
     fineRange = null;
+    fineRaw = null;
 }
 
 /* ----- loading ----- */
 // Load the coarse full-history backdrop once per coin.
 function loadAllData(cb) {
     loadJSONP(config[currconfig].url + "all.js", function(raw) {
-        allData = buildStructured(raw);
-        var s0 = allData[0][0];
+        allRaw = raw;
+        allData = structuredFor(allRaw);
+        var s0 = allData[0];
         baseFrom = s0[0][0];
         baseTo = nowMs();               // right edge tracks the present, not the last all sample
         allInc = s0.length < 2 ? 1440 : (s0[1][0] - s0[0][0]) / 60000;
         data = allData;
         fineRange = null;
+        fineRaw = null;
         if (cb) { cb(); }
     });
 }
@@ -360,7 +402,8 @@ function loadFine(visFrom, visTo) {
               "&e=" + Math.floor(qto/1000) +
               "&i=" + inc, function(raw) {
         if (!raw || !raw.length) { return; }
-        data = buildStructured(raw);
+        fineRaw = raw;
+        data = structuredFor(fineRaw);
         fineRange = { from: qfrom, to: qto };
         refreshChart();
         pinZoom(visFrom, visTo);
@@ -477,7 +520,7 @@ function clickby(pos) {
         if (el) { el.classList.toggle("selected", i == pos); }
     }
     currentby = pos;
-    if (chart) { refreshChart(); }
+    if (chart) { rebuildForMetric(); refreshChart(); }
     sethash();
 }
 
