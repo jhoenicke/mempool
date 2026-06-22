@@ -105,6 +105,8 @@ var baseFrom = 0;                // first timestamp in allData (ms) -- fixed x-a
 var baseTo = 0;                  // x-axis max (ms): "now", advanced every 5 min by liveRefresh
 var programmaticZoom = false;    // guard so our own zoom updates don't re-trigger the handler
 var settleTimer, reloadTimer;
+var pointerY = null;             // latest cursor y in canvas pixels, for the band-focused tooltip
+var TOOLTIP_BANDS = 9;           // how many bands to show around the hovered one
 
 function nowMs() { return Date.now(); }
 
@@ -231,6 +233,18 @@ function buildSeries() {
     return series;
 }
 
+var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "2019 Jun 27, 14:00" in local time (matching the time axis).  echarts'
+// formatTime has no month-name token -- "MMM" there expands to "066".
+function fmtTime(ms) {
+    var d = new Date(ms);
+    function p2(n) { return n < 10 ? "0" + n : "" + n; }
+    return d.getFullYear() + " " + MONTHS[d.getMonth()] + " " + d.getDate() +
+           ", " + p2(d.getHours()) + ":" + p2(d.getMinutes());
+}
+
 function tooltipFormatter(params) {
     if (!params.length) { return ""; }
     var dataidx = byindex[currentby];
@@ -245,22 +259,51 @@ function tooltipFormatter(params) {
     var xIndex = params[0].dataIndex;
     if (xIndex == null || xIndex < 0) { xIndex = 0; }
     if (xIndex >= theData[0].length) { xIndex = theData[0].length - 1; }
-    var time = echarts.format.formatTime("MMM dd, hh:mm", theData[0][xIndex][0]);
+    var time = fmtTime(theData[0][xIndex][0]);
+
+    // Find which stacked band the cursor sits in (by its y value) and show only a
+    // window of bands around it, so a coin with dozens of bands can't produce a
+    // tooltip taller than the screen.  Sums stay cumulative across all bands.
+    var lastBand = show.length - 1;
+    var focus = lastBand;
+    if (pointerY != null) {
+        var yVal = chart.convertFromPixel({ yAxisIndex: 0 }, pointerY);
+        var acc = 0;
+        focus = feelevel;
+        for (var b = feelevel; b <= lastBand; b++) {
+            var r = theData[b] && theData[b][xIndex];
+            if (r) { acc += r[1]; }
+            focus = b;
+            if (yVal <= acc) { break; }
+        }
+    }
+    var win = Math.min(TOOLTIP_BANDS, lastBand - feelevel + 1);
+    var lo = focus - (win >> 1);
+    if (lo < feelevel) { lo = feelevel; }
+    var hi = lo + win - 1;
+    if (hi > lastBand) { hi = lastBand; lo = hi - win + 1; }
+
+    function moreRow(n) {
+        return "<tr><td colspan='2' style='text-align:center;color:#999'>⋯ " + n + " more ⋯</td></tr>";
+    }
     var str = "<strong>" + time + "</strong><table style='border-collapse:collapse'>";
+    if (hi < lastBand) { str += moreRow(lastBand - hi); }
     var sum = 0;
-    for (var i = show.length - 1; i >= 0; i--) {
-        if (i < feelevel) { continue; }
+    for (var i = lastBand; i >= feelevel; i--) {
         // theData can briefly lag show/feelevel during a data swap (backdrop<->fine,
         // metric or coin switch); skip bands that aren't present yet rather than throw.
         var row = theData[i];
         if (!row || !row[xIndex]) { continue; }
         sum += row[xIndex][1];
+        if (i > hi || i < lo) { continue; }   // outside the window: count it, don't list it
         var value = config[currconfig].ranges[show[i]];
         var sw = "<span style='display:inline-block;width:9px;height:9px;margin-right:4px;background:" +
                  config[currconfig].colors[i] + "'></span>";
-        str += "<tr><td>" + sw + (value == 0 ? "total" : value + "+") + ":&nbsp;</td><td style='text-align:right'>" +
+        var weight = i == focus ? "font-weight:bold;" : "";
+        str += "<tr style='" + weight + "'><td>" + sw + (value == 0 ? "total" : value + "+") + ":&nbsp;</td><td style='text-align:right'>" +
                sum.toFixed(prec).replace(/(\d)(?=(\d{3})+$)/g, '$1,') + "&nbsp;" + unit + "</td></tr>";
     }
+    if (lo > feelevel) { str += moreRow(lo - feelevel); }
     return str + "</table>";
 }
 
@@ -300,6 +343,9 @@ function setupChart() {
     if (!chart) {
         chart = echarts.init(document.getElementById("chartContainer"), null, { renderer: "canvas" });
         chart.on("datazoom", onDataZoom);
+        // Track the cursor's y so the tooltip can focus on the hovered band.
+        chart.getZr().on("mousemove", function(e) { pointerY = e.offsetY; });
+        chart.getZr().on("globalout", function() { pointerY = null; });
     }
     chart.setOption(baseOption(), { notMerge: true });
 }
