@@ -99,12 +99,12 @@ var allData = null;              // coarse full-history backdrop, from all.js
 var allInc = 1440;               // sampling interval of allData, in minutes
 var data = [];                   // currently displayed structured data (allData or fine)
 var fineRange = null;            // {from,to} of the loaded fine data, or null when showing allData
-var baseFrom = 0;                // first timestamp available in allData (ms)
+var baseFrom = 0;                // first timestamp in allData (ms) -- fixed x-axis min
+var baseTo = 0;                  // last timestamp in allData (ms) -- fixed x-axis max
 var programmaticZoom = false;    // guard so our own zoom updates don't re-trigger the handler
 var settleTimer, reloadTimer;
 
 function nowMs() { return Date.now(); }
-function baseTo() { return nowMs(); }   // right clamp: allow fetching up to the present
 
 /* ----- units / scale / title, identical semantics to the original ----- */
 function units(idx) {
@@ -269,7 +269,9 @@ function baseOption() {
             textStyle: { fontSize: 12 }
         },
         grid: { left: 60, right: 20, top: 40, bottom: 70 },
-        xAxis: { type: "time", axisLabel: { hideOverlap: true } },
+        // Fixed to the full all-data range so the scale never jumps when data is
+        // swapped, and so zoom-out always has the whole timeline to expand into.
+        xAxis: { type: "time", min: baseFrom, max: baseTo, axisLabel: { hideOverlap: true } },
         yAxis: { type: "value", name: units(byindex[currentby]), scale: false },
         dataZoom: [
             { type: "inside", filterMode: "none" },
@@ -338,6 +340,7 @@ function loadAllData(cb) {
         allData = buildStructured(raw);
         var s0 = allData[0][0];
         baseFrom = s0[0][0];
+        baseTo = s0[s0.length - 1][0];
         allInc = s0.length < 2 ? 1440 : (s0[1][0] - s0[0][0]) / 60000;
         data = allData;
         fineRange = null;
@@ -351,7 +354,7 @@ function loadFine(visFrom, visTo) {
     var inc = incrementFor(span);
     var margin = span * 0.5;
     var qfrom = Math.max(baseFrom, visFrom - margin);
-    var qto = Math.min(baseTo(), visTo + margin);
+    var qto = Math.min(baseTo, visTo + margin);
     loadJSONP(config[currconfig].url +
               "db.php?s=" + Math.floor(qfrom/1000) +
               "&e=" + Math.floor(qto/1000) +
@@ -406,7 +409,7 @@ function scheduleReload() {
 function liveRefresh() {
     var w = getWindow();
     // only meaningful when viewing the present at fine resolution
-    if (fineRange && w.to >= nowMs() - 2 * 60000) {
+    if (fineRange && w.to >= baseTo - 2 * 60000) {
         loadFine(w.from, w.to);
     }
     scheduleReload();
@@ -424,7 +427,7 @@ function selectbutton(timespan) {
 function setView(timespan) {
     currtimespan = timespan;
     sethash();
-    var to = baseTo();
+    var to = baseTo;
     var from = periodMs[timespan] != null ? to - periodMs[timespan] : baseFrom;
     from = Math.max(baseFrom, from);
     showAll();
