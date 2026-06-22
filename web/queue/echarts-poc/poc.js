@@ -100,7 +100,7 @@ var allInc = 1440;               // sampling interval of allData, in minutes
 var data = [];                   // currently displayed structured data (allData or fine)
 var fineRange = null;            // {from,to} of the loaded fine data, or null when showing allData
 var baseFrom = 0;                // first timestamp in allData (ms) -- fixed x-axis min
-var baseTo = 0;                  // last timestamp in allData (ms) -- fixed x-axis max
+var baseTo = 0;                  // x-axis max (ms): "now", advanced every 5 min by liveRefresh
 var programmaticZoom = false;    // guard so our own zoom updates don't re-trigger the handler
 var settleTimer, reloadTimer;
 
@@ -340,7 +340,7 @@ function loadAllData(cb) {
         allData = buildStructured(raw);
         var s0 = allData[0][0];
         baseFrom = s0[0][0];
-        baseTo = s0[s0.length - 1][0];
+        baseTo = nowMs();               // right edge tracks the present, not the last all sample
         allInc = s0.length < 2 ? 1440 : (s0[1][0] - s0[0][0]) / 60000;
         data = allData;
         fineRange = null;
@@ -401,16 +401,31 @@ function onSettle() {
     loadFine(w.from, w.to);
 }
 
-/* ----- live refresh: keep the present edge current when zoomed in ----- */
+/* ----- live refresh: advance the right edge to "now" every 5 minutes ----- */
 function scheduleReload() {
     clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(liveRefresh, 60000);
+    reloadTimer = setTimeout(liveRefresh, 300000);   // matches the server autoupdate cadence
 }
 function liveRefresh() {
-    var w = getWindow();
-    // only meaningful when viewing the present at fine resolution
-    if (fineRange && w.to >= baseTo - 2 * 60000) {
-        loadFine(w.from, w.to);
+    if (chart) {
+        var prevTo = baseTo;
+        baseTo = nowMs();                       // move the fixed scale's right edge to now
+        var w = getWindow();
+        // if the view was tracking the present edge, keep it pinned to "now";
+        // otherwise leave the user's window where it is.
+        var atPresent = w.to >= prevTo - 6 * 60000;
+        var to = atPresent ? baseTo : w.to;
+        // update axis max and re-anchor the window atomically (absolute values,
+        // so the moved max can't make the window drift)
+        chart.setOption({
+            xAxis: { max: baseTo },
+            dataZoom: [ { startValue: w.from, endValue: to },
+                        { startValue: w.from, endValue: to } ]
+        });
+        // pull the newest samples when viewing the present at fine resolution
+        if (atPresent && fineRange) {
+            loadFine(w.from, to);
+        }
     }
     scheduleReload();
 }
