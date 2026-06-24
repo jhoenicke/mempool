@@ -107,6 +107,7 @@ var programmaticZoom = false;    // guard so our own zoom updates don't re-trigg
 var settleTimer, reloadTimer;
 var pointerY = null;             // latest cursor y in canvas pixels, for the band-focused tooltip
 var TOOLTIP_BANDS = 9;           // how many bands to show around the hovered one
+var MAX_BACKDROP_POINTS = 1500;  // cap the in-memory all.js backdrop; db.php gives fine detail on settle
 
 function nowMs() { return Date.now(); }
 
@@ -208,6 +209,17 @@ function buildSeries() {
     // Bands below feelevel are skipped entirely (not drawn zeroed), so the
     // native stack starts at the first shown band.
     for (var j = feelevel; j < show.length; j++) {
+        // Skip bands that are entirely zero in the current view (e.g. ETH's many
+        // empty high-fee bands): a zero band adds nothing to the stack, so not
+        // emitting it spares ECharts the per-point ingestion and rasterisation
+        // that the profile showed dominating render time.  The tooltip still
+        // reads every band from `data`, so its totals are unaffected.
+        var bandData = theData[j];
+        var nonzero = false;
+        for (var p = 0; p < bandData.length; p++) {
+            if (bandData[p][1] !== 0) { nonzero = true; break; }
+        }
+        if (!nonzero) { continue; }
         var name = config[currconfig].ranges[show[j]];
         var legend = j == show.length - 1 ? (name + "+ " + priceunit)
                                            : name + "-" + config[currconfig].ranges[show[j+1]];
@@ -220,6 +232,11 @@ function buildSeries() {
             stack: "total",
             stackStrategy: "all",
             showSymbol: false,
+            // Non-interactive: we use an axis-trigger tooltip + our own pointerY,
+            // never per-band hover.  silent suppresses event dispatch; the actual
+            // findHover hit-test cost is killed in silenceBandShapes (silent alone
+            // doesn't stop zrender's contain() walk in 5.6).
+            silent: true,
             // Opaque fill (baked toward white to keep the translucent look) plus a
             // same-colour stroke on the band's top edge.  The stroke is invisible
             // against its own fill but paints over the thin white anti-aliasing
@@ -317,6 +334,10 @@ function baseOption() {
         },
         tooltip: {
             trigger: "axis",
+            // On touch (no hover) show the tooltip only on tap, so it stops
+            // flickering during pinch/scroll; keep hover-to-show on desktop.
+            triggerOn: (window.matchMedia && window.matchMedia("(hover: none)").matches)
+                       ? "click" : "mousemove|click",
             confine: true,
             axisPointer: { type: "line" },
             formatter: tooltipFormatter,
@@ -329,7 +350,13 @@ function baseOption() {
         yAxis: { type: "value", name: units(byindex[currentby]), scale: false },
         dataZoom: [
             { type: "inside", filterMode: "none" },
-            { type: "slider", filterMode: "none", height: 22, bottom: 18 }
+            // showDataShadow off: the shadow is a full-history silhouette polygon
+            // that series.silent doesn't cover, so dragging the slider ran an
+            // expensive findHover->contains over it on every touchmove.
+            // brushSelect off: removes the slider's interactive brush layer, which
+            // is likewise hit-tested on every pointer move.
+            { type: "slider", filterMode: "none", height: 22, bottom: 18,
+              showDataShadow: false, brushSelect: false }
         ],
         graphic: [{
             type: "text", right: 12, top: 28, z: 0,
@@ -339,12 +366,43 @@ function baseOption() {
     };
 }
 
+// Mark the rendered band shapes non-interactive so zrender's findHover skips
+// them (it only point-in-polygon-tests elements that aren't silent).  Cheap: it
+// just flips a flag on the existing display list, no geometry, no re-render.
+function noContain() { return false; }
+
+// findHover() in this zrender still runs the band shapes' point-in-polygon test
+// even when they're flagged silent (silent only suppresses event dispatch, not
+// the geometry test).  That contain() walk over every vertex was the 300ms cost
+// on drag/pinch.  Replace contain() with a constant false on the band shapes so
+// findHover short-circuits.  Nothing else hit-tests the bands (the tooltip is
+// axis-triggered, dataZoom is coordinate-based), and ECharts reuses these
+// element objects across renders, so this sticks.
+function silenceBandShapes() {
+    var zr = chart && chart.getZr();
+    var list = zr && zr.storage && zr.storage.getDisplayList ? zr.storage.getDisplayList() : null;
+    if (!list) { return; }
+    for (var i = 0; i < list.length; i++) {
+        var el = list[i], t = el && el.type;
+        if (t === "ec-polygon" || t === "ec-polyline" || t === "polygon" || t === "polyline") {
+            el.silent = true;
+            el.contain = noContain;
+        }
+    }
+}
+
 function setupChart() {
     if (!chart) {
         chart = echarts.init(document.getElementById("chartContainer"), null, { renderer: "canvas" });
         chart.on("datazoom", onDataZoom);
-        // Track the cursor's y so the tooltip can focus on the hovered band.
+        // After every render, neutralise the band shapes' hit-testing so zrender's
+        // findHover doesn't run a 300ms point-in-polygon over every band on each
+        // drag/pinch.  See silenceBandShapes.
+        chart.getZr().on("rendered", silenceBandShapes);
+        // Track the cursor/touch y so the tooltip can focus on the right band.
+        // mousedown covers a tap (which may emit no mousemove) for click-trigger.
         chart.getZr().on("mousemove", function(e) { pointerY = e.offsetY; });
+        chart.getZr().on("mousedown", function(e) { pointerY = e.offsetY; });
         chart.getZr().on("globalout", function() { pointerY = null; });
     }
     chart.setOption(baseOption(), { notMerge: true });
@@ -409,10 +467,25 @@ function showAll() {
 }
 
 /* ----- loading ----- */
+// Drop whole rows (keeping every band aligned) so the backdrop never exceeds
+// maxPoints.  all.js is sampled every 6h, but over years that is still ~14k
+// points/band -- far more than the screen can show, and it is what gets
+// repainted during every pan/zoom gesture.  Fine detail comes from db.php once
+// the zoom settles, so a coarse backdrop is all we need here.
+function downsampleRows(raw, maxPoints) {
+    if (raw.length <= maxPoints) { return raw; }
+    var stride = Math.ceil(raw.length / maxPoints);
+    var out = [];
+    for (var i = 0; i < raw.length; i += stride) { out.push(raw[i]); }
+    var last = raw[raw.length - 1];
+    if (out[out.length - 1] !== last) { out.push(last); }   // keep the present edge
+    return out;
+}
+
 // Load the coarse full-history backdrop once per coin.
 function loadAllData(cb) {
     loadJSONP(config[currconfig].url + "all.js", function(raw) {
-        allRaw = raw;
+        allRaw = downsampleRows(raw, MAX_BACKDROP_POINTS);
         allData = structuredFor(allRaw);
         var s0 = allData[0];
         baseFrom = s0[0][0];
