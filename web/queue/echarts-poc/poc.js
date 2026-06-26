@@ -206,20 +206,13 @@ function buildSeries() {
     var show = config[currconfig].show;
     var priceunit = config[currconfig].priceunit;
     var series = [];
-    // Bands below feelevel are skipped entirely (not drawn zeroed), so the
-    // native stack starts at the first shown band.
-    for (var j = feelevel; j < show.length; j++) {
-        // Skip bands that are entirely zero in the current view (e.g. ETH's many
-        // empty high-fee bands): a zero band adds nothing to the stack, so not
-        // emitting it spares ECharts the per-point ingestion and rasterisation
-        // that the profile showed dominating render time.  The tooltip still
-        // reads every band from `data`, so its totals are unaffected.
-        var bandData = theData[j];
-        var nonzero = false;
-        for (var p = 0; p < bandData.length; p++) {
-            if (bandData[p][1] !== 0) { nonzero = true; break; }
-        }
-        if (!nonzero) { continue; }
+    // Emit EVERY band, always, in the same order with the same id.  Bands below
+    // feelevel are hidden (zeroed + transparent) rather than removed, so the
+    // series set never changes between renders.  A variable set updated via
+    // replaceMerge let ECharts mismatch band data/colour on zoom and feelevel
+    // changes (colours appeared scrambled); a stable set can't.
+    for (var j = 0; j < show.length; j++) {
+        var visible = j >= feelevel;
         var name = config[currconfig].ranges[show[j]];
         var legend = j == show.length - 1 ? (name + "+ " + priceunit)
                                            : name + "-" + config[currconfig].ranges[show[j+1]];
@@ -240,11 +233,12 @@ function buildSeries() {
             // Opaque fill (baked toward white to keep the translucent look) plus a
             // same-colour stroke on the band's top edge.  The stroke is invisible
             // against its own fill but paints over the thin white anti-aliasing
-            // seam ECharts leaves between stacked areas on steep falls.
-            lineStyle: { width: 2, color: fill },
-            areaStyle: { color: fill, opacity: 1 },
+            // seam ECharts leaves between stacked areas on steep falls.  Hidden
+            // bands are zeroed so they drop out of the stack but keep its baseline.
+            lineStyle: { width: visible ? 2 : 0, color: fill },
+            areaStyle: { color: fill, opacity: visible ? 1 : 0 },
             emphasis: { disabled: true },
-            data: theData[j]
+            data: visible ? theData[j] : theData[j].map(function(pt) { return [pt[0], 0]; })
         });
     }
     return series;
@@ -408,15 +402,15 @@ function setupChart() {
     chart.setOption(baseOption(), { notMerge: true });
 }
 
-// Re-render series + title + y-axis without touching the zoom window.
-// replaceMerge on 'series' so a higher feelevel (fewer bands) actually drops the
-// now-hidden series instead of leaving them merged in from the previous render.
+// Re-render series + title + y-axis without touching the zoom window.  The
+// series set is stable (every band, every render), so a plain merge updates each
+// band in place by id -- no replaceMerge, which was scrambling band colours.
 function refreshChart() {
     chart.setOption({
         title: { text: title(byindex[currentby]) },
         yAxis: { name: units(byindex[currentby]) },
         series: buildSeries()
-    }, { replaceMerge: ["series"] });
+    });
 }
 
 // Rebuild the displayed data for the current metric from the raw rows we kept.
