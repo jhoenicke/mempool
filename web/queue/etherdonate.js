@@ -3,6 +3,9 @@ var token = 0;
 var currentToken = null;
 var eurovalue = 3.0; // default donation amount
 var cgPrices = null;
+var ethProvider = null; // the EIP-1193 provider currently in use
+const ethProviders = new Map(); // uuid -> {info, provider}, from EIP-6963 announcements
+var discoveryFinalized = false; // true once we've decided which provider(s) to offer
 
 const ethNetworks = {
     1: {
@@ -199,8 +202,8 @@ async function sendTransaction() {
     const parsedValue = BigInt(floor) * (10n ** BigInt(decimals))
         + BigInt(frac.substring(0,decimals));
     try {
-        const accounts = await window.ethereum.request({
-            method: 'eth_accounts',
+        const accounts = await ethProvider.request({
+            method: 'eth_requestAccounts',
             params: [],
         });
         if (accounts.length === 0) {
@@ -217,7 +220,7 @@ async function sendTransaction() {
             data = "0xa9059cbb" +
                 "000000000000000000000000c6f9a38c4b0269deef360aed2852b7d22b6297d9" +
                 data;
-            result = await window.ethereum.request({method: "eth_sendTransaction", params: [
+            result = await ethProvider.request({method: "eth_sendTransaction", params: [
                 { from: from,
                   chainId: ethNetworks[chainId].chainId,
                   to: token,
@@ -225,7 +228,7 @@ async function sendTransaction() {
                   value: "0x" } ]});
         } else {
             const hexValue = "0x" + parsedValue.toString(16);
-            result = await window.ethereum.request({
+            result = await ethProvider.request({
                 method: "eth_sendTransaction",
                 params: [
                     { from: from,
@@ -271,7 +274,7 @@ function setChainId(id) {
 
 async function switchChainId(id) {
     try {
-        await window.ethereum.request({
+        await ethProvider.request({
             method: "wallet_switchEthereumChain",
             params: [ { chainId: ethNetworks[id].chainId } ]
         });
@@ -305,7 +308,7 @@ function updateChain(chid) {
 }
 
 async function checkChainId() {
-    const chid = await window.ethereum.request({
+    const chid = await ethProvider.request({
         method: "eth_chainId",
         params: []
     });
@@ -356,18 +359,98 @@ function getCoinGeckoPrices() {
     xhr.send();
 }
 
-function ethInit() {
-    if (typeof window.ethereum !== 'undefined') {
-        document.getElementById("ethapp").innerText = window.ethereum.isBraveWallet ? "Brave" : window.ethereum.isFrame ? "Frame" : window.ethereum.isMetaMask ? "MetaMask" : "your Browser Wallet";
-        document.getElementById("ethdonate").style.display = "inline-block";
-        checkChainId();
-
-        window.ethereum.on("chainChanged", updateChain);
-        document.getElementById("ethsendbutton").onclick = sendTransaction;
-        document.getElementById("ethamount").onchange = updateAmount;
-        document.getElementById("ethtoken").onchange = updateToken;
-        document.getElementById("ethnetwork").onchange = updateNetwork;
-        getCoinGeckoPrices();
+// EIP-6963 (https://eips.ethereum.org/EIPS/eip-6963): wallets announce themselves
+// via an event instead of fighting over `window.ethereum`. Just listening for
+// the announcement is passive -- it never talks to a wallet and never causes
+// a popup. We only ever call .request() on a provider the user has actually
+// chosen (implicitly, when there is only one; explicitly, via the wallet
+// dropdown, when there are several).
+function handleAnnounceProvider(event) {
+    const { info, provider } = event.detail;
+    if (ethProviders.has(info.uuid)) {
+        return;
     }
+    ethProviders.set(info.uuid, { info, provider });
+    // If we already finalized a choice (or already showed the dropdown),
+    // fold late announcements in without re-deciding for the user.
+    if (!ethProvider && discoveryFinalized) {
+        chooseDiscoveredProvider();
+    }
+}
+
+// Called once discovery has had time to settle (all wallets that were going
+// to answer the initial "eip6963:requestProvider" broadcast synchronously
+// have done so), and again for any wallet that announces itself late.
+function chooseDiscoveredProvider() {
+    discoveryFinalized = true;
+    if (ethProviders.size === 1) {
+        const { info, provider } = ethProviders.values().next().value;
+        useProvider(provider, info.name);
+    } else if (ethProviders.size > 1) {
+        showWalletChoice();
+    } else if (typeof window.ethereum !== 'undefined') {
+        // No EIP-6963 announcements at all: fall back to the legacy global
+        // for wallets that don't support EIP-6963 yet.
+        const legacyName = window.ethereum.isBraveWallet ? "Brave" : window.ethereum.isFrame ? "Frame" : window.ethereum.isMetaMask ? "MetaMask" : "your Browser Wallet";
+        useProvider(window.ethereum, legacyName);
+    }
+}
+
+function showWalletChoice() {
+    const selectobj = document.getElementById("ethwallet");
+    while (selectobj.firstChild) {
+        selectobj.removeChild(selectobj.firstChild);
+    }
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.text = "Choose a wallet";
+    placeholder.selected = true;
+    selectobj.add(placeholder);
+    ethProviders.forEach(({ info }) => {
+        const optobj = document.createElement("option");
+        optobj.value = info.uuid;
+        optobj.text = info.name;
+        selectobj.add(optobj);
+    });
+    selectobj.onchange = (event) => {
+        const chosen = ethProviders.get(event.currentTarget.value);
+        if (chosen) {
+            useProvider(chosen.provider, chosen.info.name);
+        }
+    };
+    // #ethwalletchoice lives inside #ethdonate, so the outer container has to
+    // be shown too, even though we haven't picked (and won't touch) a
+    // provider yet.
+    document.getElementById("ethdonate").style.display = "inline-block";
+    document.getElementById("ethwalletchoice").style.display = "inline-block";
+}
+
+function useProvider(provider, name) {
+    ethProvider = provider;
+    document.getElementById("ethapp").innerText = name;
+    document.getElementById("ethdonate").style.display = "inline-block";
+    document.getElementById("ethwalletchoice").style.display = "none";
+    checkChainId();
+
+    ethProvider.on("chainChanged", updateChain);
+    document.getElementById("ethsendbutton").onclick = sendTransaction;
+    document.getElementById("ethamount").onchange = updateAmount;
+    document.getElementById("ethtoken").onchange = updateToken;
+    document.getElementById("ethnetwork").onchange = updateNetwork;
+    getCoinGeckoPrices();
+}
+
+function ethInit() {
+    window.addEventListener("eip6963:announceProvider", handleAnnounceProvider);
+    // Asks any already-listening wallet to (re-)announce itself. This is a
+    // plain DOM event, not a provider RPC call, so it cannot trigger a wallet
+    // popup by itself.
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    // Give injected wallets a moment to answer -- multiple wallets can all
+    // respond to the broadcast above, so we wait for the full batch before
+    // deciding whether to auto-select or ask the user, rather than jumping on
+    // the first announcement to arrive.
+    setTimeout(chooseDiscoveredProvider, 200);
 }
 
