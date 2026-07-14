@@ -158,12 +158,6 @@ const ethNetworks = {
         chainName: "Polygon Mainnet",
         tokens: [
             {
-                token: 0,
-                symbol: "MATIC",
-                cgid: "matic-network",
-                decimals: 18
-            },
-            {
                 token: "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
                 symbol: "WETH",
                 cgid: "ethereum",
@@ -174,6 +168,18 @@ const ethNetworks = {
                 symbol: "DAI",
                 cgid: "usd",
                 decimals: 18,
+            },
+            {
+                token: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+                symbol: "USDC",
+                cgid: "usd",
+                decimals: 6,
+            },
+            {
+                token: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+                symbol: "USDT",
+                cgid: "usd",
+                decimals: 6,
             },
         ],
         blockExplorerUrls: ["https://polygonscan.com/"]
@@ -344,7 +350,7 @@ function updateAmount(event) {
 
 function getCoinGeckoPrices() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Cethereum%2Cusd%2Cmatic-network&vs_currencies=eur");
+    xhr.open("GET", "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Cethereum%2Cusd&vs_currencies=eur");
     xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
             cgPrices = JSON.parse(xhr.response);
@@ -429,7 +435,6 @@ function useProvider(provider, name) {
     ethProvider = provider;
     document.getElementById("ethapp").innerText = name;
     document.getElementById("ethdonate").style.display = "inline-block";
-    document.getElementById("ethwalletchoice").style.display = "none";
     checkChainId();
 
     ethProvider.on("chainChanged", updateChain);
