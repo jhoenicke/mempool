@@ -752,13 +752,21 @@ function button(timespan) {
     setView(timespan);
 }
 
-function selectCoin(cfg) {
+// hashfeelevel, if given, is the fee-rate threshold restored from the URL
+// hash (see main()); otherwise the coin's last-used feelevel is kept.
+function selectCoin(cfg, hashfeelevel) {
     for (var i = 0; i < config.length; i++) {
         var el = document.getElementById("cfg" + i);
         if (el) { el.classList.toggle("selected", i == cfg); }
     }
     currconfig = cfg;
     feelevel = config[currconfig].lastfeelevel;
+    if (hashfeelevel != null && hashfeelevel >= 0) {
+        var idx = config[currconfig].show.findIndex(function(show) {
+            return config[currconfig].ranges[show] >= hashfeelevel;
+        });
+        feelevel = idx >= 0 ? idx : config[currconfig].feelevel;
+    }
     loadAllData(function() {
         buildLegend();
         setView(currtimespan);
@@ -814,6 +822,12 @@ function sethash() {
     location.hash = "#" + config[currconfig].name + "," + currtimespan + "," + bynames[currentby] + optfeelevel;
 }
 
+function findcoin(name) {
+    var idx = /^\d+$/.test(name) ? Number(name) :
+        config.findIndex(function(item) { return item.name == decodeURIComponent(name); });
+    return idx < 0 || idx >= config.length ? 0 : idx;
+}
+
 function makeButton(id, text, onclick) {
     var btn = document.createElement("a");
     btn.text = text;
@@ -848,7 +862,24 @@ function main() {
 
     window.addEventListener("resize", function(){ if (chart) { chart.resize(); } });
 
-    currentby = 0;
-    document.getElementById("by0").classList.add("selected");
-    selectCoin(0);
+    // Restore coin/period/metric/feelevel from the URL hash (written by
+    // sethash() on every change) so a reload lands back where the user left
+    // off instead of resetting to the defaults.
+    var hashconfig = 0, hashtimespan = "24h", hashby = 0, hashfeelevel = -1;
+    if (location.hash.length > 0) {
+        var args = location.hash.substring(1).split(",");
+        var argindex = 0;
+        if (argindex + 1 < args.length) { hashconfig = findcoin(args[argindex]); argindex++; }
+        if (argindex < args.length) { hashtimespan = args[argindex]; argindex++; }
+        if (argindex < args.length) {
+            var by = bynames.indexOf(args[argindex]);
+            if (by >= 0) { hashby = by; argindex++; }
+        }
+        if (argindex < args.length) { hashfeelevel = args[argindex]; argindex++; }
+    }
+    currentby = hashby;
+    document.getElementById("by" + currentby).classList.add("selected");
+    currtimespan = hashtimespan;
+    selectbutton(currtimespan);
+    selectCoin(hashconfig, hashfeelevel);
 }
