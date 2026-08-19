@@ -20,17 +20,20 @@
 
     Data model (the part this PoC is exploring):
       * The full-history "all" feed is loaded once and kept as a coarse
-        backdrop (allData).  All zooming and panning happens instantly on
-        this in-memory data -- no network round-trip during the gesture.
-      * Only when the zoom has been stable for ~1s do we fetch higher
+        backdrop (allData).  It gives the fixed axis bounds and an instant
+        (no network) preview while a period's own data is loading, and is
+        also the fallback the moment a gesture pans/zooms outside the
+        currently loaded window.
+      * Clicking a period button (2h ... all) loads that period's own
+        static file (e.g. 24h.js) directly -- same as the production Flot
+        chart -- so the initial range shown is never a database query.
+      * Only once the user actually starts an interactive zoom/pan (drag,
+        pinch, slider) and it has been stable for ~1s do we fetch matching
         resolution data for the visible window from db.php (fineData).
-      * If a later gesture leaves the fine window, we instantly fall back
+      * If a later gesture leaves the loaded window, we instantly fall back
         to the coarse backdrop so zoom-out stays smooth, then re-settle.
       * The view is always anchored to absolute timestamps, so swapping the
         underlying data never makes the visible window jump.
-
-    The static per-period files (2h.js ... all.js) remain the production
-    fast path; here we only use all.js (backdrop) + db.php (detail).
 */
 
 var chart;                       // the ECharts instance
@@ -134,16 +137,36 @@ function title(idx) {
     }
 }
 
-/* ----- JSONP loader, unchanged from the original ----- */
+/* ----- JSONP loader ----- */
+// All static/db.php feeds are wrapped in a literal `call(...)` -- the payload
+// can't carry a per-request callback name -- so only one script can own the
+// global `window.call` at a time.  A loadJSONP callback can itself trigger
+// another loadJSONP synchronously (e.g. setView loads a period file from
+// inside loadAllData's own completion handler); without queuing, the second
+// script overwrites window.call before the first script's wrapper gets to
+// clean up, and that cleanup then deletes the SECOND script's callback,
+// leaving it stranded ("call is not defined") once it actually loads. Queue
+// requests and only ever have one script tag in flight.
+var jsonpQueue = [];
+var jsonpBusy = false;
 function loadJSONP(url, callback) {
+    jsonpQueue.push({ url: url, callback: callback });
+    pumpJSONP();
+}
+function pumpJSONP() {
+    if (jsonpBusy || !jsonpQueue.length) { return; }
+    jsonpBusy = true;
+    var job = jsonpQueue.shift();
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = url;
+    script.src = job.url;
     window['call'] = function(data){
-        callback(data);
         document.getElementsByTagName('head')[0].removeChild(script);
         script = null;
         delete window['call'];
+        jsonpBusy = false;
+        job.callback(data);   // may itself call loadJSONP -- busy is already clear
+        pumpJSONP();
     };
     document.getElementsByTagName('head')[0].appendChild(script);
 }
@@ -492,7 +515,19 @@ function loadAllData(cb) {
     });
 }
 
+// Show freshly loaded detail rows (from either db.php or a static period
+// file) as the current data; fineRange is the timestamp extent they cover
+// (may be wider than the window the caller then pins the zoom to).
+function applyDetailData(raw, rangeFrom, rangeTo) {
+    fineRaw = raw;
+    data = structuredFor(fineRaw);
+    fineRange = { from: rangeFrom, to: rangeTo };
+    refreshChart();
+}
+
 // Fetch higher-resolution data for the visible window (plus margin) and show it.
+// Only called once the user is actually mid-gesture (see onDataZoom/onSettle
+// below) -- never on initial load or a plain period-button click.
 function loadFine(visFrom, visTo) {
     var span = visTo - visFrom;
     var inc = incrementFor(span);
@@ -504,11 +539,21 @@ function loadFine(visFrom, visTo) {
               "&e=" + Math.floor(qto/1000) +
               "&i=" + inc, function(raw) {
         if (!raw || !raw.length) { return; }
-        fineRaw = raw;
-        data = structuredFor(fineRaw);
-        fineRange = { from: qfrom, to: qto };
-        refreshChart();
+        applyDetailData(raw, qfrom, qto);
         pinZoom(visFrom, visTo);
+    });
+}
+
+// Load the pre-built static file for a period button (e.g. 24h.js) --
+// production's own fast path, so the initial range for a period never costs
+// a database query.  The file's own timestamp extent is drawn as-is.
+function loadPeriodFile(timespan) {
+    loadJSONP(config[currconfig].url + timespan + ".js", function(raw) {
+        // Drop stale responses if the user already clicked a different period.
+        if (currtimespan !== timespan || !raw || !raw.length) { return; }
+        var from = raw[0][0] * 1000, to = raw[raw.length - 1][0] * 1000;
+        applyDetailData(raw, from, to);
+        pinZoom(from, to);
     });
 }
 
@@ -583,10 +628,17 @@ function selectbutton(timespan) {
     }
 }
 
-// Set the visible window to a period, instantly on the backdrop, then settle.
+// Set the visible window to a period: instantly on the backdrop, then swap in
+// that period's own static file (e.g. 24h.js) once it loads -- a plain file
+// fetch, never a database query.  db.php is only ever reached via an actual
+// interactive zoom/pan, see onDataZoom/onSettle below.
 function setView(timespan) {
     currtimespan = timespan;
     sethash();
+    // The initial all.js load hasn't resolved yet (period buttons are clickable
+    // right away); remember the choice and bail -- selectCoin's loadAllData
+    // callback re-invokes setView(currtimespan) once allData exists.
+    if (!allData) { return; }
     var to = baseTo;
     var from = periodMs[timespan] != null ? to - periodMs[timespan] : baseFrom;
     from = Math.max(baseFrom, from);
@@ -594,7 +646,7 @@ function setView(timespan) {
     setupChart();          // creates the chart on first call, full re-render afterwards
     pinZoom(from, to);
     clearTimeout(settleTimer);
-    settleTimer = setTimeout(onSettle, 300);    // explicit intent: fetch detail promptly
+    if (timespan !== "all") { loadPeriodFile(timespan); }
 }
 
 function button(timespan) {
