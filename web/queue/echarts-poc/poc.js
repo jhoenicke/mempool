@@ -474,8 +474,8 @@ function baseOption() {
               showDataShadow: false, brushSelect: false }
         ],
         graphic: [{
-            type: "text", right: 12, top: 28, z: 0,
-            style: { text: "mempool.jhoenicke.de", fontSize: 20, fill: "rgba(0,0,0,0.12)", fontFamily: "Arial" }
+            type: "text", right: 12, top: 48, z: 0,
+            style: { text: "mempool.jhoenicke.de", fontSize: 28, fill: "rgba(0,0,0,0.22)", fontFamily: "Arial" }
         }],
         series: buildSeries()
     };
