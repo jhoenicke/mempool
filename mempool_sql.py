@@ -66,6 +66,23 @@ def parse_txdata(obj):
         return None
     return obj
 
+def res_level(timestamp):
+    # Coarsest sampling level this row belongs to, over a nested ladder of
+    # minute steps (each divides the next).  Part of the (res, time) primary
+    # key so db.php can read a given resolution sequentially; see db.php.
+    minute = timestamp // 60
+    if minute % 1440 == 0:
+        return 5
+    if minute % 360 == 0:
+        return 4
+    if minute % 60 == 0:
+        return 3
+    if minute % 10 == 0:
+        return 2
+    if minute % 2 == 0:
+        return 1
+    return 0
+
 def dump_data(timestamp, sizes, count, fees):
     sizesstr = ",".join(str(x) for x in sizes)
     countstr = ",".join(str(x) for x in count)
@@ -74,8 +91,9 @@ def dump_data(timestamp, sizes, count, fees):
         logfile.write("[{:d},[{}],[{}],[{}]],\n"
                       .format(timestamp, countstr, sizesstr, feesstr))
     proc = Popen([MYSQL, MYSQLMEMPOOLDB], stdin=PIPE, stdout=PIPE)
-    proc.communicate("INSERT INTO mempool VALUES({:d},{},{},{});\n"
-                     .format(timestamp, countstr, sizesstr, feesstr)
+    proc.communicate("INSERT INTO mempool VALUES({:d},{},{},{},{:d});\n"
+                     .format(timestamp, countstr, sizesstr, feesstr,
+                             res_level(timestamp))
                      .encode("ascii"))
 
 def main():

@@ -42,9 +42,26 @@ try {
     if ($increment <= 0) {
         $increment = 1;
     }
-    $query = $db->prepare("SELECT * FROM mempool WHERE time >= :start AND time < :end and (time DIV 60) MOD :increment = 0 ORDER BY time");
+    /*
+     * Resolution ladder (minutes between samples).  Each step divides the
+     * next, so the persistent generated column `res` (the coarsest level a
+     * row belongs to) makes "every Nth minute" a sargable index lookup:
+     * a row qualifies for level L iff res >= L.  We pick the finest ladder
+     * step <= the requested increment and select that level and coarser via
+     * the (res, time) index, instead of scanning the whole interval and
+     * applying a non-indexable MOD.  See altertable-res.sql.
+     */
+    $ladder = array(1, 2, 10, 60, 360, 1440);
+    $level = 0;
+    for ($k = 0; $k < count($ladder); $k++) {
+        if ($ladder[$k] <= $increment) {
+            $level = $k;
+        }
+    }
+    $levels = implode(",", range($level, count($ladder) - 1));  // integers, safe to inline
+    $query = $db->prepare("SELECT * FROM mempool WHERE res IN ($levels) AND time >= :start AND time < :end ORDER BY time");
 
-    $query->execute(array(':start' => $start, ':end' => $end, ':increment' => $increment));
+    $query->execute(array(':start' => $start, ':end' => $end));
     header("Content-Type: application/javascript; charset=UTF-8");
     echo 'call([';
     $comma="";
