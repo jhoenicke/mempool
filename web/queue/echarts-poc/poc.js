@@ -247,8 +247,15 @@ function title(idx) {
 // requests and only ever have one script tag in flight.
 var jsonpQueue = [];
 var jsonpBusy = false;
+// A static file (or db.php) can transiently 404 -- e.g. the ramdisk backing it
+// just got cleared (logind's RemoveIPC wipes /dev/shm on logout, a reboot, ...)
+// -- and the per-minute cron job that (re)generates it hasn't run yet.  Retry
+// after a minute rather than leaving the chart broken, a few times to cover a
+// slow full rebuild, then give up.
+var JSONP_RETRY_DELAY = 60000;
+var JSONP_MAX_RETRIES = 5;
 function loadJSONP(url, callback) {
-    jsonpQueue.push({ url: url, callback: callback });
+    jsonpQueue.push({ url: url, callback: callback, attempt: 0 });
     pumpJSONP();
 }
 function pumpJSONP() {
@@ -258,12 +265,31 @@ function pumpJSONP() {
     var script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = job.url;
-    window['call'] = function(data){
+    var settled = false;
+    function cleanup() {
+        if (settled) { return; }
+        settled = true;
         document.getElementsByTagName('head')[0].removeChild(script);
         script = null;
         delete window['call'];
         jsonpBusy = false;
+    }
+    window['call'] = function(data){
+        cleanup();
         job.callback(data);   // may itself call loadJSONP -- busy is already clear
+        pumpJSONP();
+    };
+    script.onerror = function() {
+        cleanup();
+        if (job.attempt < JSONP_MAX_RETRIES) {
+            console.warn("retrying " + job.url + " in a minute (attempt " + (job.attempt + 1) + ")");
+            setTimeout(function() {
+                jsonpQueue.push({ url: job.url, callback: job.callback, attempt: job.attempt + 1 });
+                pumpJSONP();
+            }, JSONP_RETRY_DELAY);
+        } else {
+            console.warn("giving up on " + job.url + " after " + job.attempt + " retries");
+        }
         pumpJSONP();
     };
     document.getElementsByTagName('head')[0].appendChild(script);
