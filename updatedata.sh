@@ -45,4 +45,4 @@ updatefile 30d 43200 30
 updatefile 3m 131040 90
 updatefile 6m 262080 180
 updatefile 1y 524160 360
-updatefile_all 360
+updatefile_all 1440

@@ -42,4 +42,4 @@ createfile_filtered 30d 43200 30
 createfile_filtered 3m 131040 90
 createfile_filtered 6m 262080 180
 createfile_filtered 1y 524160 360
-createfile_all 360
+createfile_all 1440
