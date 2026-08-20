@@ -231,7 +231,7 @@ async function sendTransaction() {
                   chainId: ethNetworks[chainId].chainId,
                   to: token,
                   data: data,
-                  value: "0x" } ]});
+                  value: "0x0" } ]});
         } else {
             const hexValue = "0x" + parsedValue.toString(16);
             result = await ethProvider.request({
