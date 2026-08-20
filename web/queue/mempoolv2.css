@@ -1,4 +1,4 @@
-/* ECharts proof-of-concept styles - mobile-first */
+/* Mempool chart styles - mobile-first */
 * { box-sizing: border-box; }
 body {
     font-family: "Open Sans", Helvetica, Arial, sans-serif;
@@ -6,6 +6,14 @@ body {
     padding: 8px;
     color: #222;
     -webkit-text-size-adjust: 100%;
+}
+a {
+    text-decoration: none;
+    color: #008;
+}
+p {
+    max-width: 65em;
+    margin: 1.5ex auto;
 }
 .header {
     font-size: 15px;
@@ -47,12 +55,44 @@ body {
     border: 1px solid rgba(0,0,0,0.2);
 }
 .legenditem.hide { opacity: 0.4; text-decoration: line-through; }
-.note {
+
+/* ----- donation box (shared with the explanatory text above it) ----- */
+.centered { text-align: center; }
+#donbox { min-height: 236px; }
+.donation {
+    display: inline-block;
+    position: relative;
+    margin: 1ex 1em;
     font-size: 13px;
-    color: #555;
-    max-width: 720px;
-    line-height: 1.5;
 }
+.sidebyside { display: inline-block; }
+.hidden { display: none; }
+.qrcontainer {
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    margin: 1ex 3em;
+}
+.qrcode { display: inline-block; }
+.qrlogo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.pixelated {
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+}
+.cover {
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.lnbutton { vertical-align: middle; }
+.bolt { margin-bottom: 2ex; }
+
 @media (max-width: 600px) {
     .header { font-size: 14px; }
     .chart-container { height: 55vh; }

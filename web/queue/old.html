@@ -2,8 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
     <title>Johoe's Bitcoin Mempool Size Statistics</title>
-    <script src="echarts.min.js"></script>
-    <script src="mempoolv2.js"></script>
+    <script src="flot/jquery.min.js"></script>
+    <script src="flot/jquery.flot.min.js"></script>
+    <script src="flot/jquery.flot.time.min.js"></script>
+    <script src="flot/jquery.flot.stack.min.js"></script>
+    <script src="flot/jquery.flot.resize.min.js"></script>
+    <script src="flot/jquery.flot.selection.min.js"></script>
+    <script src="flot/jquery.flot.navigate.min.js"></script>
+    <script src="flot/jquery.flot.watermark.min.js"></script>
+    <script src="mempool.js?v=2.0.23"></script>
     <script src="etherdonate.js?v=1.1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -16,7 +23,7 @@
     <link rel="shortcut icon" sizes="192x192" type="image/png" href="mempool-icon-192.png">
     <link rel="icon" type="image/png" href="mempool-icon-192.png">
     <link rel="canonical" href="https://mempool.jhoenicke.de/">
-    <link href="mempoolv2.css" rel="stylesheet" type="text/css">
+    <link href="style.css" rel="stylesheet" type="text/css">
 </head>
 <body onLoad="main();">
   <div class="header">
@@ -32,14 +39,16 @@
       document.getElementById("javascriptwarning").style.display = "none";
     </script>
   </div>
-  <div id="chartContainer" class="chart-container"></div>
+  <div id="chartContainer" class="chart-container" style="height: 600px;"></div>
   <div id="chartLegend" class="chart-legend"></div>
+  <div id="tooltip"></div>
+  <div id="chartDivider" class="chart-divider">:&nbsp;:&nbsp;:&nbsp;:</div>
   <div>
     <p>
-      This page shows the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. These transactions haven't been written to the block chain yet and kept in the volatile memory. This page gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch doge ltc dash">fee rate: the amount of fee they pay per <span class="btc ltc">virtual</span> byte</span><span class="eth">gas price they pay</span>.  The data on this page is generated from my full node and is updated every minute.  In decentralized cryptocurrencies there is no global transaction mempool. Every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
+      This page shows the unconfirmed transactions, also known as the transactions in the <b>mempool</b>. These transactions haven't been written to the block chain yet and kept in the volatile memory. This page gives a real-time view and shows how the mempool evolves over the time.  The transactions are colored by the <span class="btc bch bsv doge ltc dash">fee rate: the amount of fee they pay per <span class="btc ltc">virtual</span> byte</span><span class="eth">gas price they pay</span>.  The data on this page is generated from my full node and is updated every minute.  In decentralized cryptocurrencies there is no global transaction mempool. Every node keeps its own set of unconfirmed transactions that it has seen.  The mempool is also cleared when I reboot my node.
     </p>
-    <p>The data is colored by fee rate <span class="btc bch doge ltc dash">given in satoshi per bytes</span><span class="eth">also known as gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions using this fee rate are not confirmed during this time, because there are higher paying transactions that take precedence. </p>
-    <p>The horizontal axis is time and you can choose the range from the last <em>2h</em> to <em>all</em>.  The vertical axis of the chart can be switched between <em>count</em>, <em>fee</em>, and <em>weight</em>.  In the <em>weight</em> chart the height of the graph reflects the total transaction <span class="btc bch doge ltc dash">size</span><span class="eth">gas limit</span> instead of the number of transactions.  If a stripe on the <em>weight</em> chart is much bigger than on the <em>count</em> chart, the transactions in this stripe are <span class="btc bch doge ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.
+    <p>The data is colored by fee rate <span class="btc bch bsv doge ltc dash">given in satoshi per bytes</span><span class="eth">also known as gas price</span>.  The lowest colored stripe is for transactions that pay the lowest fee.  Higher fee transactions are stacked on top of it.  Since miners prefer high fee transactions, a new block usually only removes the top-most <span class="btc ltc">1 MB worth of </span>transactons from the queue.  If a colored stripe persists over several hours without getting smaller, this means that transactions using this fee rate are not confirmed during this time, because there are higher paying transactions that take precedence. </p>
+    <p>The horizontal axis is time and you can choose the range from the last <em>2h</em> to <em>all</em>.  The vertical axis of the chart can be switched between <em>count</em>, <em>fee</em>, and <em>weight</em>.  In the <em>weight</em> chart the height of the graph reflects the total transaction <span class="btc bch bsv doge ltc dash">size</span><span class="eth">gas limit</span> instead of the number of transactions.  If a stripe on the <em>weight</em> chart is much bigger than on the <em>count</em> chart, the transactions in this stripe are <span class="btc bch bsv doge ltc dash">larger</span><span class="eth">more computation demanding</span> than the average.
     Similarly, in the <em>fee</em> chart, the height reflects the total amount of fee the pending transactions pay.</p>
     <p>You can click on some fee rate in the legend to hide all fee rates below that level.  This way you can see better how many transactions are competing with that fee level.</p>
     <p><span class="btc ltc">Note that sizes include the segwit discount.  This means that the graphs show virtual byte (weight divided by four).  For segwit transactions, the real size of the transaction is a bit larger than the virtual size.  A block will always take at most 1 vMB from the mempool, even if it is bigger than 1&nbsp;MB, and the weight diagram shows the size in vbyte (with the segwit discount included).  The segwit discount is also included when computing the fee rate for a transaction. </span>In case a transaction pays exactly the fee that defines the boundary between stripes, it is included in the higher stripe.  Free transactions are not included, even if they make it into the mempool.</p>
@@ -130,7 +139,7 @@
     <div class="centered" style="font-size: 13px; margin: 20px;">
         This page is using free software. All statistics are generated by running my own full nodes.<br>
         Source code on github: <a href="https://github.com/jhoenicke/mempool">https://github.com/jhoenicke/mempool</a><br>
-        © 2016-2026 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
+        © 2016-2023 <a href="https://jochen-hoenicke.de/">Jochen Hoenicke</a>
     </div>
   </body>
 </html>

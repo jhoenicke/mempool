@@ -1,5 +1,5 @@
 /*
-    Bitcoin Mempool Visualization - ECharts Proof of Concept
+    Bitcoin Mempool Visualization - ECharts edition
     Copyright (C) 2017-2026  Jochen Hoenicke
 
     This program is free software: you can redistribute it and/or modify
@@ -16,9 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     ----------------------------------------------------------------------
-    PROOF OF CONCEPT: the Flot chart re-implemented on Apache ECharts.
+    The mempool chart, re-implemented on Apache ECharts (formerly a Flot
+    chart; see old.html/mempool.js for the previous version).
 
-    Data model (the part this PoC is exploring):
+    Data model:
       * Clicking a period button (2h ... all) loads that period's own
         static file (e.g. 24h.js) directly -- same as the production Flot
         chart -- so the initial range shown is never a database query.
@@ -51,9 +52,15 @@ var chart;                       // the ECharts instance
 var bynames = [ "count", "fee", "weight" ];
 var byindex = [ 0, 2, 1 ];
 var currentby = 0;
+// Distinct config[].classname values.  Elements throughout the page (the
+// explanatory text, the donation addresses) are tagged with these class
+// names and shown/hidden to match whichever coin's chart is selected --
+// see applyCoinVisibility/setdonate.
+var classes = [ "btc", "eth", "bch", "doge", "ltc", "dash" ];
 var config = [
     {"name":"BTC",
      "classname": "btc",
+     "donatebutton": true,
      "title":"Bitcoin Core 30.2.  Huge mempool limit and no timeout.",
      "url":"https://johoe.jochen-hoenicke.de/queue/2/",
      "historyStart": 1481883544,
@@ -97,6 +104,7 @@ var config = [
      "inc": true},
     {"name":"ETH",
      "classname":"eth",
+     "donatebutton": true,
      "title":"geth 1.17.1 + nimbus 26.3.0 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth4/",
      "historyStart": 1607367640,
@@ -120,6 +128,7 @@ var config = [
      "inc": true},
     {"name":"BCH",
      "classname": "bch",
+     "donatebutton": true,
      "title":"Bitcoin Cash - BCHN 29.0.0.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
      "historyStart": 1519122121,
@@ -140,6 +149,7 @@ var config = [
      "inc": true},
     {"name":"DOGE",
      "classname": "doge",
+     "donatebutton": true,
      "title":"Dogecoin 1.14.9",
      "url":"https://johoe.jochen-hoenicke.de/queue/doge/",
      "historyStart": 1613471702,
@@ -160,6 +170,7 @@ var config = [
      "inc": true},
     {"name":"LTC",
      "classname": "ltc",
+     "donatebutton": true,
      "title":"Litecoin Core 0.21.4",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
      "historyStart": 1513803928,
@@ -181,6 +192,7 @@ var config = [
      "inc": true},
     {"name":"DASH",
      "classname": "dash",
+     "donatebutton": true,
      "title":"Dash Core v23.1.1 with default memory limit",
      "url":"https://johoe.jochen-hoenicke.de/queue/dash/",
      "historyStart": 1539912876,
@@ -987,6 +999,42 @@ function resetTiers() {
     data = structuredFor([]);
 }
 
+// Copy an <input>'s value to the clipboard (used by the donation box's
+// "copy address" link).
+function copyToClip(fldname) {
+    var fld = document.getElementById(fldname);
+    fld.select();
+    fld.setSelectionRange(0, 9999);
+    document.execCommand("copy");
+}
+
+// Show only the page text/donation elements tagged with the currently
+// selected coin's classname; hide the same for every other known classname.
+function applyCoinVisibility() {
+    var mine = config[currconfig].classname;
+    for (var i = 0; i < classes.length; i++) {
+        if (classes[i] === mine) { continue; }
+        var hide = document.getElementsByClassName(classes[i]);
+        for (var j = hide.length - 1; j >= 0; j--) { hide[j].style.display = 'none'; }
+    }
+    var show = document.getElementsByClassName(mine);
+    for (var k = show.length - 1; k >= 0; k--) { show[k].style.display = 'inline'; }
+}
+
+// Pick which coin's donation address is displayed. Independent of the
+// chart's selected coin (selectCoin resets it to match by default, but the
+// user can then pick a different donate button without changing the chart).
+function setdonate(coin) {
+    for (var i = 0; i < classes.length; i++) {
+        var btn = document.getElementById("don" + classes[i]);
+        if (btn) { btn.classList.remove("selected"); }
+        var els = document.getElementsByClassName("do" + classes[i]);
+        for (var j = 0; j < els.length; j++) { els[j].style.display = classes[i] == coin ? 'inline' : 'none'; }
+    }
+    var sel = document.getElementById("don" + coin);
+    if (sel) { sel.classList.add("selected"); }
+}
+
 // hashfeelevel, if given, is the fee-rate threshold restored from the URL
 // hash (see main()); otherwise the coin's last-used feelevel is kept.
 function selectCoin(cfg, hashfeelevel) {
@@ -1002,6 +1050,8 @@ function selectCoin(cfg, hashfeelevel) {
         });
         feelevel = idx >= 0 ? idx : config[currconfig].feelevel;
     }
+    applyCoinVisibility();
+    setdonate(config[currconfig].classname);
     resetTiers();
     buildLegend();
     setView(currtimespan);
@@ -1076,10 +1126,16 @@ function makeButton(id, text, onclick) {
 
 function main() {
     var divcoins = document.getElementById("configs");
+    var divdonate = document.getElementById("donatecoins");
     for (var i = 0; i < config.length; i++) {
         (function(idx){
             divcoins.appendChild(document.createTextNode("​"));
             divcoins.appendChild(makeButton("cfg" + idx, config[idx].name, function(){ selectCoin(idx); }));
+            if (config[idx].donatebutton && divdonate) {
+                divdonate.appendChild(document.createTextNode("​"));
+                divdonate.appendChild(makeButton("don" + config[idx].classname, config[idx].name,
+                    function(){ setdonate(config[idx].classname); }));
+            }
         })(i);
     }
     var divp = document.getElementById("periods");
