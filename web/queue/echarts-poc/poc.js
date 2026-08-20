@@ -19,19 +19,30 @@
     PROOF OF CONCEPT: the Flot chart re-implemented on Apache ECharts.
 
     Data model (the part this PoC is exploring):
-      * The full-history "all" feed is loaded once and kept as a coarse
-        backdrop (allData).  It gives the fixed axis bounds and an instant
-        (no network) preview while a period's own data is loading, and is
-        also the fallback the moment a gesture pans/zooms outside the
-        currently loaded window.
       * Clicking a period button (2h ... all) loads that period's own
         static file (e.g. 24h.js) directly -- same as the production Flot
         chart -- so the initial range shown is never a database query.
+      * "all.js" (the full-history feed) is NOT loaded eagerly.  Once the
+        selected period's own file succeeds, a "30d" medium backdrop is
+        fetched in the background (skipped if the selected period is
+        already >= 30d) so zooming out a moderate amount stays instant.
+        "all.js" itself is only fetched lazily, the moment a gesture
+        actually pans/zooms past whatever's currently loaded.
+      * The x-axis is fixed to each coin's true full-history bounds from the
+        very first render (config[].historyStart), even before "all.js" has
+        loaded, so dataZoom can drag/pinch out that far immediately; only
+        the *data* for the far-out region is missing until the lazy fetch
+        lands (a brief sparse/flat patch, not an axis jump).
+      * The chart is always fed a data slice restricted to the visible
+        window (plus one padding point on each edge) rather than a tier's
+        full extent, so the y-axis auto-scale reflects only what's on
+        screen -- see sliceRaw/setActive.
       * Only once the user actually starts an interactive zoom/pan (drag,
         pinch, slider) and it has been stable for ~1s do we fetch matching
-        resolution data for the visible window from db.php (fineData).
+        resolution data for the visible window from db.php (detailTier).
       * If a later gesture leaves the loaded window, we instantly fall back
-        to the coarse backdrop so zoom-out stays smooth, then re-settle.
+        to the best available backdrop tier so zoom-out stays smooth, then
+        re-settle.
       * The view is always anchored to absolute timestamps, so swapping the
         underlying data never makes the visible window jump.
 */
@@ -45,6 +56,7 @@ var config = [
      "classname": "btc",
      "title":"Bitcoin Core 30.2.  Huge mempool limit and no timeout.",
      "url":"https://johoe.jochen-hoenicke.de/queue/2/",
+     "historyStart": 1481883544,
      "sizeunit":"vMB",
      "priceunit":"sat/vB",
      "symbol":"BTC",
@@ -66,6 +78,7 @@ var config = [
      "classname": "btc",
      "title":"Bitcoin Core 30.2 with default mempool settings (300 MB + 14 days timeout).",
      "url":"https://electrum.jochen-hoenicke.de/btc/",
+     "historyStart": 1493426623,
      "sizeunit":"vMB",
      "priceunit":"sat/vB",
      "symbol":"BTC",
@@ -86,6 +99,7 @@ var config = [
      "classname":"eth",
      "title":"geth 1.17.1 + nimbus 26.3.0 with 150k slots",
      "url":"https://jochen-hoenicke.de/queue/eth4/",
+     "historyStart": 1607367640,
      "symbol":"ETH",
      "sizeunit":"Mgas",
      "priceunit":"Gwei",
@@ -108,6 +122,7 @@ var config = [
      "classname": "bch",
      "title":"Bitcoin Cash - BCHN 29.0.0.",
      "url":"https://johoe.jochen-hoenicke.de/queue/cash/",
+     "historyStart": 1519122121,
      "sizeunit":"MB",
      "priceunit":"sat/B",
      "symbol":"BCH",
@@ -127,6 +142,7 @@ var config = [
      "classname": "doge",
      "title":"Dogecoin 1.14.9",
      "url":"https://johoe.jochen-hoenicke.de/queue/doge/",
+     "historyStart": 1613471702,
      "symbol":"DOGE",
      "priceunit":"DOGE/kB",
      "sizeunit":"MB",
@@ -146,6 +162,7 @@ var config = [
      "classname": "ltc",
      "title":"Litecoin Core 0.21.4",
      "url":"https://johoe.jochen-hoenicke.de/queue/litecoin/",
+     "historyStart": 1513803928,
      "sizeunit":"vMB",
      "priceunit":"lit/vB",
      "symbol":"LTC",
@@ -166,6 +183,7 @@ var config = [
      "classname": "dash",
      "title":"Dash Core v23.1.1 with default memory limit",
      "url":"https://johoe.jochen-hoenicke.de/queue/dash/",
+     "historyStart": 1539912876,
      "sizeunit":"MB",
      "priceunit":"Duff/B",
      "symbol":"DASH",
@@ -195,20 +213,31 @@ var feelevel = 0;
 var currconfig = 0;
 var currtimespan = "24h";
 
-/* ----- layered data ----- */
-var allRaw = null;               // raw full-history rows from all.js (kept for metric switches)
-var allData = null;              // coarse backdrop, structured for the current metric: allData[band]=[[t,v],..]
-var allInc = 1440;               // sampling interval of allData, in minutes
-var fineRaw = null;              // raw rows of the loaded fine window, or null when showing the backdrop
-var data = [];                   // currently displayed structured data for the current metric (allData or fine)
-var fineRange = null;            // {from,to} of the loaded fine data, or null when showing allData
-var baseFrom = 0;                // first timestamp in allData (ms) -- fixed x-axis min
-var baseTo = 0;                  // x-axis max (ms): "now", advanced every 5 min by liveRefresh
+/* ----- layered data -----
+   Three "tiers" of raw rows may be known at once, each {raw,from(ms),to(ms),inc(minutes)}:
+     detailTier - the selected period's own file, or a db.php window once the user zooms
+     medTier    - the "30d" medium backdrop, loaded eagerly once detailTier succeeds
+                  (skipped if the selected period is already >= 30d)
+     allTier    - the full-history backdrop, loaded lazily only once the user zooms/pans
+                  past whatever's currently loaded
+   `data` (fed to the chart) is always a WINDOWED SLICE of whichever tier is
+   currently active, never a tier's full extent -- see sliceRaw/setActive. */
+var allTier = null, medTier = null, detailTier = null;   // per-coin; reset on coin switch
+var medLoading = false, allLoading = false;              // in-flight guards, per-coin
+var activeRaw = null;             // raw rows `data` is currently sliced from (some tier's .raw)
+var activeInc = 1440;             // that source's sampling interval, in minutes
+var activeWindow = null;          // {from,to} (ms) that `data` was sliced to
+var lastSliceAt = 0;              // throttle timestamp for re-slicing during a live gesture
+var RESLICE_MIN_MS = 200;         // min ms between re-slices while dragging/pinching
+var MEDIUM_PERIOD = "30d";
+var data = [];                    // currently displayed structured data for the current metric
+var baseFrom = 0;                 // fixed x-axis min (ms) -- config[currconfig].historyStart*1000
+var baseTo = 0;                   // x-axis max (ms): "now", advanced every 5 min by liveRefresh
 var programmaticZoom = false;    // guard so our own zoom updates don't re-trigger the handler
 var settleTimer, reloadTimer;
 var pointerY = null;             // latest cursor y in canvas pixels, for the band-focused tooltip
 var TOOLTIP_BANDS = 9;           // how many bands to show around the hovered one
-var MAX_BACKDROP_POINTS = 1500;  // cap the in-memory all.js backdrop; db.php gives fine detail on settle
+var MAX_BACKDROP_POINTS = 1500;  // cap the in-memory backdrop tiers; db.php gives fine detail on settle
 
 function nowMs() { return Date.now(); }
 
@@ -485,8 +514,10 @@ function baseOption() {
             textStyle: { fontSize: 12 }
         },
         grid: { left: 60, right: 20, top: 40, bottom: 70 },
-        // Fixed to the full all-data range so the scale never jumps when data is
-        // swapped, and so zoom-out always has the whole timeline to expand into.
+        // Fixed to the coin's true full-history range (baseFrom comes from
+        // config[].historyStart, not from loading all.js) so the scale never
+        // jumps when data is swapped, and zoom-out always has the whole
+        // timeline to expand into -- even before all.js itself has loaded.
         xAxis: { type: "time", min: baseFrom, max: baseTo, axisLabel: { hideOverlap: true } },
         yAxis: { type: "value", name: units(byindex[currentby]), scale: false },
         dataZoom: [
@@ -561,9 +592,18 @@ function refreshChart() {
 }
 
 // Rebuild the displayed data for the current metric from the raw rows we kept.
+// Re-slice whatever raw source is currently active at whatever window is
+// currently on screen -- correct in every mid-transition state (backdrop
+// showing while a period file is in flight, detail showing, nothing loaded
+// yet) without tracking two separate structured caches.
 function rebuildForMetric() {
-    if (allRaw) { allData = structuredFor(allRaw); }
-    data = fineRaw ? structuredFor(fineRaw) : allData;
+    var w = chart ? getWindow() : activeWindow;
+    if (activeRaw && w) {
+        data = structuredFor(sliceRaw(activeRaw, w.from, w.to));
+        activeWindow = w;
+    } else {
+        data = structuredFor([]);
+    }
 }
 
 /* ----- zoom helpers ----- */
@@ -594,17 +634,90 @@ function incrementFor(spanMs) {
     return inc < 1 ? 1 : inc;
 }
 
-// Interval (minutes) of whatever data is currently displayed.
-function currentInc() {
-    var s = data[0];
-    return s.length < 2 ? allInc : (s[1][0] - s[0][0]) / 60000;
+/* ----- tiers: raw source + extent + resolution, and the windowed slice fed to the chart ----- */
+// {raw, from(ms), to(ms), inc(minutes)} -- from/to are the raw rows' own
+// timestamp extent; inc is the mean sampling interval actually kept (after
+// any downsampling), used to judge whether a tier's resolution suffices.
+function tierFor(raw) {
+    var from = raw[0][0] * 1000, to = raw[raw.length - 1][0] * 1000;
+    var inc = raw.length < 2 ? 1440 : (to - from) / (raw.length - 1) / 60000;
+    return { raw: raw, from: from, to: to, inc: inc };
+}
+
+// First index i with raw[i][0] >= tSec (raw sorted ascending), else raw.length.
+function lowerBound(raw, tSec) {
+    var lo = 0, hi = raw.length;
+    while (lo < hi) {
+        var mid = (lo + hi) >> 1;
+        if (raw[mid][0] < tSec) { lo = mid + 1; } else { hi = mid; }
+    }
+    return lo;
+}
+
+// The window-restriction requirement: return only the rows inside [from,to]
+// (ms), plus exactly one row of padding before/after when available, so the
+// drawn line/area doesn't look chopped off right at the boundary.  Feeding
+// only this slice to the chart (instead of a tier's full extent) is what
+// keeps the y-axis auto-scale matching what's actually on screen.
+function sliceRaw(raw, from, to) {
+    if (!raw || !raw.length) { return []; }
+    var i0 = lowerBound(raw, from / 1000);
+    var i1 = lowerBound(raw, to / 1000 + 1) - 1;
+    var start = i0 > 0 ? i0 - 1 : 0;
+    var end = i1 + 2 < raw.length ? i1 + 2 : raw.length;
+    if (end <= start) { end = start + 1; }
+    return raw.slice(start, end);
+}
+
+// The one place `data` is assigned: slice `tier`'s raw rows to [from,to] and
+// remember what's currently on screen so metric switches / legend clicks can
+// rebuild consistently.
+function setActive(tier, from, to) {
+    activeRaw = tier.raw;
+    activeInc = tier.inc;
+    activeWindow = { from: from, to: to };
+    data = structuredFor(sliceRaw(tier.raw, from, to));
+}
+
+function windowMatches(w) {
+    return activeWindow &&
+        Math.abs(w.from - activeWindow.from) < 1000 &&
+        Math.abs(w.to - activeWindow.to) < 1000;
+}
+
+// Re-slice+redraw only if the active source or window actually changed.
+function ensureSlice(tier, w) {
+    if (activeRaw === tier.raw && windowMatches(w)) { return false; }
+    setActive(tier, w.from, w.to);
+    refreshChart();
+    return true;
+}
+
+// The finest loaded backdrop tier that covers window w's left edge (the
+// right edge is always close to "now" for both backdrop files, so only the
+// left edge needs checking).
+function bestBackdrop(w) {
+    if (medTier && w.from >= medTier.from - 60000) { return medTier; }
+    if (allTier) { return allTier; }
+    if (medTier) { return medTier; }
+    return detailTier;
 }
 
 /* ----- display source switching ----- */
-function showAll() {
-    data = allData;
-    fineRange = null;
-    fineRaw = null;
+// Show the best available backdrop for window w, sliced to that window.
+function showBackdrop(w) {
+    // Compute bd BEFORE clearing detailTier: bestBackdrop's last-resort
+    // fallback is the current detailTier, and if that's captured only after
+    // nulling it, a lone detail tier (no medium/all loaded yet) would be
+    // discarded outright instead of used as a sparse stand-in.
+    var bd = bestBackdrop(w);
+    detailTier = null;
+    if (bd) {
+        ensureSlice(bd, w);
+    } else {
+        data = structuredFor([]);
+        if (chart) { refreshChart(); }
+    }
 }
 
 /* ----- loading ----- */
@@ -623,29 +736,73 @@ function downsampleRows(raw, maxPoints) {
     return out;
 }
 
-// Load the coarse full-history backdrop once per coin.
-function loadAllData(cb) {
-    loadJSONP(config[currconfig].url + "all.js", function(raw) {
-        allRaw = downsampleRows(raw, MAX_BACKDROP_POINTS);
-        allData = structuredFor(allRaw);
-        var s0 = allData[0];
-        baseFrom = s0[0][0];
-        baseTo = nowMs();               // right edge tracks the present, not the last all sample
-        allInc = s0.length < 2 ? 1440 : (s0[1][0] - s0[0][0]) / 60000;
-        data = allData;
-        fineRange = null;
-        fineRaw = null;
-        if (cb) { cb(); }
+// Is the medium ("30d") backdrop worth prefetching for this period? Not if
+// the period is itself already that wide or wider (30d/3m/6m/1y), and not
+// for "all" (periodMs[timespan] is null there).
+function needsMedium(timespan) {
+    var span = periodMs[timespan];
+    return span != null && span < periodMs[MEDIUM_PERIOD];
+}
+
+// Refresh the displayed backdrop after a medium/all tier finishes loading,
+// but only if detail (the selected period, or a db.php fetch) isn't already
+// authoritative -- a backdrop tier arriving late must never override it.
+function maybeRefreshBackdrop() {
+    if (!chart || detailTier) { return; }
+    showBackdrop(getWindow());
+}
+
+// Load the "30d" medium backdrop in the background. Guarded on coin only --
+// it's a per-coin dataset, valid regardless of which period is selected by
+// the time it lands.
+function loadMedTier() {
+    if (medTier || medLoading) { return; }
+    medLoading = true;
+    var coin = currconfig;
+    loadJSONP(config[coin].url + MEDIUM_PERIOD + ".js", function(raw) {
+        medLoading = false;
+        if (coin !== currconfig || !raw || !raw.length) { return; }
+        medTier = tierFor(downsampleRows(raw, MAX_BACKDROP_POINTS));
+        maybeRefreshBackdrop();
     });
 }
 
+// Load the full-history backdrop. Lazy: only called once a gesture actually
+// pans/zooms past whatever's currently loaded (see maybeLoadAllTier), or
+// directly when "all" itself is the selected period (cb installs it as the
+// detail tier too).
+function loadAllTier(cb) {
+    if (allTier) { if (cb) { cb(); } return; }
+    if (allLoading) { return; }
+    allLoading = true;
+    var coin = currconfig;
+    loadJSONP(config[coin].url + "all.js", function(raw) {
+        allLoading = false;
+        if (coin !== currconfig || !raw || !raw.length) { return; }
+        allTier = tierFor(downsampleRows(raw, MAX_BACKDROP_POINTS));
+        if (cb) { cb(); } else { maybeRefreshBackdrop(); }
+    });
+}
+
+// Once the user's window reaches data we don't have yet (past the medium
+// tier if it's loaded, else past the detail tier), fetch the full backdrop.
+// The axis already spans the true history (baseFrom comes from config), so
+// this is purely about data coverage, not axis bounds.
+function maybeLoadAllTier(w) {
+    if (allTier || allLoading) { return; }
+    var covered = medTier ? medTier.from : (detailTier ? detailTier.from : baseTo);
+    if (w.from < covered - 60000) { loadAllTier(null); }
+}
+
 // Show freshly loaded detail rows (from either db.php or a static period
-// file) as the current data; fineRange is the timestamp extent they cover
-// (may be wider than the window the caller then pins the zoom to).
-function applyDetailData(raw, rangeFrom, rangeTo) {
-    fineRaw = raw;
-    data = structuredFor(fineRaw);
-    fineRange = { from: rangeFrom, to: rangeTo };
+// file) as the current data, sliced to the visible window [visFrom,visTo].
+// rangeFrom/rangeTo is the wider extent the rows actually cover (loadFine's
+// margin) -- kept on detailTier so a small subsequent pan needs no refetch,
+// but never fed to the chart beyond what's visible.
+function applyDetailData(raw, rangeFrom, rangeTo, visFrom, visTo) {
+    detailTier = { raw: raw, from: rangeFrom, to: rangeTo,
+                    inc: raw.length < 2 ? 1440 : (rangeTo - rangeFrom) / (raw.length - 1) / 60000 };
+    setActive(detailTier, visFrom, visTo);
     refreshChart();
 }
 
@@ -658,12 +815,14 @@ function loadFine(visFrom, visTo) {
     var margin = span * 0.5;
     var qfrom = Math.max(baseFrom, visFrom - margin);
     var qto = Math.min(baseTo, visTo + margin);
-    loadJSONP(config[currconfig].url +
+    var coin = currconfig;
+    loadJSONP(config[coin].url +
               "db.php?s=" + Math.floor(qfrom/1000) +
               "&e=" + Math.floor(qto/1000) +
               "&i=" + inc, function(raw) {
-        if (!raw || !raw.length) { return; }
-        applyDetailData(raw, qfrom, qto);
+        // Drop stale responses if the coin changed while this was in flight.
+        if (coin !== currconfig || !raw || !raw.length) { return; }
+        applyDetailData(raw, qfrom, qto, visFrom, visTo);
         pinZoom(visFrom, visTo);
     });
 }
@@ -672,27 +831,40 @@ function loadFine(visFrom, visTo) {
 // production's own fast path, so the initial range for a period never costs
 // a database query.  The file's own timestamp extent is drawn as-is.
 function loadPeriodFile(timespan) {
-    loadJSONP(config[currconfig].url + timespan + ".js", function(raw) {
-        // Drop stale responses if the user already clicked a different period.
-        if (currtimespan !== timespan || !raw || !raw.length) { return; }
+    var coin = currconfig;
+    loadJSONP(config[coin].url + timespan + ".js", function(raw) {
+        // Drop stale responses if the coin or period changed while in flight.
+        if (coin !== currconfig || currtimespan !== timespan || !raw || !raw.length) { return; }
         var from = raw[0][0] * 1000, to = raw[raw.length - 1][0] * 1000;
-        applyDetailData(raw, from, to);
+        applyDetailData(raw, from, to, from, to);
         pinZoom(from, to);
     });
 }
 
 /* ----- the settle / coverage logic ----- */
 // Called continuously while the user zooms/pans.  Keeps the gesture smooth
-// (instant fallback to the backdrop) and schedules a reload once it stops.
+// (instant re-slice, throttled) and schedules a reload once it stops.
 function onDataZoom() {
     if (programmaticZoom) { programmaticZoom = false; return; }
     var w = getWindow();
-    // If we drifted outside the loaded fine window, fall back to the coarse
-    // backdrop immediately so zoom-out / pan never hits an empty edge.
-    if (fineRange && (w.from < fineRange.from || w.to > fineRange.to)) {
-        showAll();
-        refreshChart();
-        pinZoom(w.from, w.to);
+    maybeLoadAllTier(w);   // lazily fetch all.js once we've panned past what's loaded
+    if (!detailTier || w.from < detailTier.from || w.to > detailTier.to) {
+        // Outside (or no) detail: fall back to the best backdrop, throttled
+        // so a fast gesture doesn't rebuild the series on every tick -- see
+        // the sign-off note above showBackdrop/ensureSlice's definitions.
+        if (nowMs() - lastSliceAt >= RESLICE_MIN_MS) {
+            lastSliceAt = nowMs();
+            showBackdrop(w);
+            pinZoom(w.from, w.to);
+        }
+    } else if (!windowMatches(w)) {
+        // Inside detail, but the window moved: keep the slice (and so the
+        // y-axis) tracking the visible window as the gesture continues.
+        if (nowMs() - lastSliceAt >= RESLICE_MIN_MS) {
+            lastSliceAt = nowMs();
+            ensureSlice(detailTier, w);
+            pinZoom(w.from, w.to);
+        }
     }
     clearTimeout(settleTimer);
     settleTimer = setTimeout(onSettle, 1000);   // only reload when the zoom holds ~1s
@@ -701,15 +873,19 @@ function onDataZoom() {
 function onSettle() {
     if (!chart) { return; }
     var w = getWindow();
+    maybeLoadAllTier(w);
     var ideal = incrementFor(w.to - w.from);    // minutes the window wants
-    if (ideal >= allInc * 0.8) {
-        // wide enough that the coarse backdrop already suffices
-        if (fineRange) { showAll(); refreshChart(); pinZoom(w.from, w.to); }
+    var bd = bestBackdrop(w);
+    if (bd && bd !== detailTier && ideal >= bd.inc * 0.8) {
+        // wide enough that this backdrop's own resolution already suffices
+        detailTier = null;
+        ensureSlice(bd, w);
         return;
     }
-    // need finer data; skip if the current fine data already covers it well
-    if (fineRange && w.from >= fineRange.from && w.to <= fineRange.to &&
-        currentInc() <= ideal * 1.8) {
+    // need finer data; skip if the current detail already covers it well
+    if (detailTier && w.from >= detailTier.from && w.to <= detailTier.to &&
+        detailTier.inc <= ideal * 1.8) {
+        ensureSlice(detailTier, w);
         return;
     }
     loadFine(w.from, w.to);
@@ -736,8 +912,11 @@ function liveRefresh() {
             dataZoom: [ { startValue: w.from, endValue: to },
                         { startValue: w.from, endValue: to } ]
         });
+        // keep the slice matching the (possibly widened) window
+        var src = detailTier || bestBackdrop({ from: w.from, to: to });
+        if (src) { ensureSlice(src, { from: w.from, to: to }); }
         // pull the newest samples when viewing the present at fine resolution
-        if (atPresent && fineRange) {
+        if (atPresent && detailTier) {
             loadFine(w.from, to);
         }
     }
@@ -752,30 +931,60 @@ function selectbutton(timespan) {
     }
 }
 
-// Set the visible window to a period: instantly on the backdrop, then swap in
-// that period's own static file (e.g. 24h.js) once it loads -- a plain file
-// fetch, never a database query.  db.php is only ever reached via an actual
-// interactive zoom/pan, see onDataZoom/onSettle below.
+// Set the visible window to a period: instantly on whatever backdrop is
+// already loaded (or empty, on a cold load), then swap in that period's own
+// static file (e.g. 24h.js) once it loads -- a plain file fetch, never a
+// database query.  db.php is only ever reached via an actual interactive
+// zoom/pan, see onDataZoom/onSettle below.  Period buttons are always
+// immediately actionable -- there's no "wait for all.js first" gate.
 function setView(timespan) {
     currtimespan = timespan;
     sethash();
-    // The initial all.js load hasn't resolved yet (period buttons are clickable
-    // right away); remember the choice and bail -- selectCoin's loadAllData
-    // callback re-invokes setView(currtimespan) once allData exists.
-    if (!allData) { return; }
-    var to = baseTo;
-    var from = periodMs[timespan] != null ? to - periodMs[timespan] : baseFrom;
-    from = Math.max(baseFrom, from);
-    showAll();
-    setupChart();          // creates the chart on first call, full re-render afterwards
-    pinZoom(from, to);
     clearTimeout(settleTimer);
-    if (timespan !== "all") { loadPeriodFile(timespan); }
+    baseTo = nowMs();
+    var span = periodMs[timespan];
+    var from = Math.max(baseFrom, span != null ? baseTo - span : baseFrom);
+    showBackdrop({ from: from, to: baseTo });
+    setupChart();          // creates the chart on first call, full re-render afterwards
+    pinZoom(from, baseTo);
+
+    if (timespan === "all") {
+        // The exception mentioned in the request: "all" is fetched directly,
+        // no medium tier involved, and it doubles as the detail tier so a
+        // later zoom-out from "all" can never re-fetch (maybeLoadAllTier is
+        // guarded on allTier already being set).
+        if (allTier) {
+            applyDetailData(allTier.raw, allTier.from, allTier.to, allTier.from, allTier.to);
+            pinZoom(allTier.from, allTier.to);
+        } else {
+            loadAllTier(function() {
+                if (currtimespan !== "all") { return; }
+                applyDetailData(allTier.raw, allTier.from, allTier.to, allTier.from, allTier.to);
+                pinZoom(allTier.from, allTier.to);
+            });
+        }
+        return;
+    }
+    loadPeriodFile(timespan);
+    if (needsMedium(timespan)) { loadMedTier(); }
 }
 
 function button(timespan) {
     selectbutton(timespan);
     setView(timespan);
+}
+
+// Reset all per-coin tier/window state; called from selectCoin right after
+// currconfig is updated, since baseFrom and data's band count both depend on it.
+function resetTiers() {
+    allTier = null; medTier = null; detailTier = null;
+    medLoading = false; allLoading = false;
+    activeRaw = null; activeInc = 1440; activeWindow = null;
+    lastSliceAt = 0;
+    baseFrom = config[currconfig].historyStart * 1000;
+    clearTimeout(settleTimer);
+    clearTimeout(reloadTimer);
+    data = structuredFor([]);
 }
 
 // hashfeelevel, if given, is the fee-rate threshold restored from the URL
@@ -793,11 +1002,10 @@ function selectCoin(cfg, hashfeelevel) {
         });
         feelevel = idx >= 0 ? idx : config[currconfig].feelevel;
     }
-    loadAllData(function() {
-        buildLegend();
-        setView(currtimespan);
-        scheduleReload();
-    });
+    resetTiers();
+    buildLegend();
+    setView(currtimespan);
+    scheduleReload();
 }
 
 function clickby(pos) {
@@ -836,6 +1044,9 @@ function legendClick(level) {
     config[currconfig].lastfeelevel = feelevel;
     sethash();
     buildLegend();
+    // No data rebuild needed: bandAmount doesn't depend on feelevel, and
+    // buildSeries already zeroes bands below it -- refreshChart alone is
+    // what shrinks the stacked total (and so the y-axis) accordingly.
     refreshChart();
 }
 
@@ -891,7 +1102,7 @@ function main() {
     // Restore coin/period/metric/feelevel from the URL hash (written by
     // sethash() on every change) so a reload lands back where the user left
     // off instead of resetting to the defaults.
-    var hashconfig = 0, hashtimespan = "24h", hashby = 0, hashfeelevel = -1;
+    var hashconfig = 0, hashtimespan = "24h", hashby = bynames.indexOf("weight"), hashfeelevel = -1;
     if (location.hash.length > 0) {
         var args = location.hash.substring(1).split(",");
         var argindex = 0;
