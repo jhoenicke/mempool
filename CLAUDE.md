@@ -46,11 +46,10 @@ steps `[1, 2, 10, 60, 360, 1440]` minutes (each divides the next), so
 ## Web frontend (`web/queue/`)
 
 - `index.html` / `mempoolv2.js` — the **current** chart, built on Apache ECharts
-  (bundled `echarts.min.js`, v5.6.0). Still lives only on the `echarts-poc`
-  branch (not yet merged to `master`), even though it's now the page served
-  at `index.html` on that branch. Multi-coin, `classes = btc, eth, bch, doge,
-  ltc, dash` (derived from `config[].classname`; `donatebutton` marks which
-  coins get a donate button). Key ideas in `mempoolv2.js`:
+  (bundled `echarts.min.js`, v5.5.1). Merged to `master` from the `echarts-poc`
+  branch, and now the page served as `index.html`. Multi-coin, `classes = btc,
+  eth, bch, doge, ltc, dash` (derived from `config[].classname`; `donatebutton`
+  marks which coins get a donate button). Key ideas in `mempoolv2.js`:
   - Tiered, lazy backdrop loading instead of eagerly fetching `all.js`: the
     selected period's own static file loads first; a "30d" medium backdrop
     loads next in the background (skipped if the period is already >= 30d);
