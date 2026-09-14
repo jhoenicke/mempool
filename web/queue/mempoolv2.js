@@ -1115,12 +1115,15 @@ function findcoin(name) {
     return idx < 0 || idx >= config.length ? 0 : idx;
 }
 
-function makeButton(id, text, onclick) {
+function makeButton(id, text, onclick, title) {
     var btn = document.createElement("a");
     btn.text = text;
     btn.onclick = onclick;
     btn.className = "lnk";
     btn.id = id;
+    if (title) {
+        btn.title = title;
+    }
     return btn;
 }
 
@@ -1130,11 +1133,11 @@ function main() {
     for (var i = 0; i < config.length; i++) {
         (function(idx){
             divcoins.appendChild(document.createTextNode("​"));
-            divcoins.appendChild(makeButton("cfg" + idx, config[idx].name, function(){ selectCoin(idx); }));
+            divcoins.appendChild(makeButton("cfg" + idx, config[idx].name, function(){ selectCoin(idx); }, config[idx].title));
             if (config[idx].donatebutton && divdonate) {
                 divdonate.appendChild(document.createTextNode("​"));
                 divdonate.appendChild(makeButton("don" + config[idx].classname, config[idx].name,
-                    function(){ setdonate(config[idx].classname); }));
+                    function(){ setdonate(config[idx].classname); }, null));
             }
         })(i);
     }
