@@ -1,0 +1,33 @@
+# systemd unit for the lightning donation backend, see web/lightning/README.md
+[Unit]
+Description=Lightning donation backend for Johoe's Mempool
+After=network.target lnd.service
+
+[Service]
+User=lnweb
+Group=lnweb
+ExecStart=/home/lnd/python3/bin/python /usr/local/lib/lnweb/lnweb.py \
+    --tlscert /etc/lnweb/tls.cert \
+    --macaroon /etc/lnweb/lnweb.macaroon \
+    --lnurlp /home/mempool/mempool/web/.well-known/lnurlp/mempool
+Restart=always
+RestartSec=5
+
+# A request flood should hit these limits, not the rest of the machine.
+TasksMax=256
+MemoryMax=256M
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+[Install]
+WantedBy=multi-user.target

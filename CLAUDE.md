@@ -83,7 +83,9 @@ steps `[1, 2, 10, 60, 360, 1440]` minutes (each divides the next), so
 
 - `eth/` — separate Ethereum pipeline (own `mempool.sh`, DB `eth_mempool`, fed by
   `geth txpool.inspect` via `parse_inspect.pl` / `txpool_parse.py`).
-- `web/lightning/`, `web/lnd/` — Lightning donation / LNURL invoicing.
+- `web/lightning/`, `lnweb/` — Lightning donation / LNURL invoicing; `lnweb.py`
+  is a standalone service the web server proxies `/lnd/` to (see
+  `web/lightning/README.md`).
 - `tools/` — DB dump/merge and tx-rebroadcast helpers.
 
 ## Conventions

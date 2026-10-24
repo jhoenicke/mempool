@@ -132,8 +132,10 @@
       if (this.readyState == 4) {
          if (this.status == 200) {
             var response = JSON.parse(this.responseText);
-            if (!response.settled) { 
-               waitfor(rhash);
+            if (!response.settled) {
+               // usually the server waited a minute, but under load it
+               // answers at once, so don't poll in a tight loop
+               setTimeout(function() { waitfor(rhash); }, 2000);
             } else {
                document.getElementById("qrinvoice").style.opacity = 0.2;
                document.getElementById("qrpayed").style.display = "block";
