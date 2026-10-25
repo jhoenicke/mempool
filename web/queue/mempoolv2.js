@@ -1166,7 +1166,11 @@ function main() {
         var args = location.hash.substring(1).split(",");
         var argindex = 0;
         if (argindex + 1 < args.length) { hashconfig = findcoin(args[argindex]); argindex++; }
-        if (argindex < args.length) { hashtimespan = args[argindex]; argindex++; }
+        if (argindex < args.length) {
+            // only known periods: the name becomes part of a script URL
+            if (periods.indexOf(args[argindex]) >= 0) { hashtimespan = args[argindex]; }
+            argindex++;
+        }
         if (argindex < args.length) {
             var by = bynames.indexOf(args[argindex]);
             if (by >= 0) { hashby = by; argindex++; }

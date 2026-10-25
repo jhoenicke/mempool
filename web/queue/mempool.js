@@ -606,12 +606,12 @@ function copyToClip(fldname) {
 function findcoin(name) {
     var confignr;
     if (/^\d+$/.test(name)) {
-	confignr = name;
+	confignr = Number(name);
     } else {
 	name = decodeURIComponent(name);
 	confignr = config.findIndex((item) => item.name == name);
     }
-    if (confignr < 0 || confignr > config.length) {
+    if (confignr < 0 || confignr >= config.length) {
 	return 0;
     }
     return confignr
@@ -709,7 +709,10 @@ function main() {
 	    argindex++;
 	}
 	if (argindex < args.length) {
-	    hashtimespan = args[argindex];
+	    // only known periods: the name becomes part of a script URL
+	    if (periods.indexOf(args[argindex]) >= 0) {
+		hashtimespan = args[argindex];
+	    }
 	    argindex++;
 	}
 	if (argindex < args.length) {
