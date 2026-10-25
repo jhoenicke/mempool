@@ -1,7 +1,5 @@
 #!/bin/bash
 
-MERGESQL=/dev/shm/merge.sql
-
 if [ -z "$4" ]; then
     echo "USAGE: ./mergedb.sh db1 db2 start end"
     echo "Merges entries between start and end time from db1 into db2."
@@ -25,6 +23,9 @@ if [ $? != 0 ]; then
     exit 1
 fi
 let END+=30
+
+# fresh private file; a fixed name in /dev/shm could be planted by another user
+MERGESQL=$(mktemp) || exit 1
 
 echo "BEGIN TRANSACTION;" >> $MERGESQL
 echo "DELETE FROM mempool WHERE time >= $START AND time <= $END;" >> $MERGESQL
