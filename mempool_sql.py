@@ -84,9 +84,11 @@ def res_level(timestamp):
     return 0
 
 def dump_data(timestamp, sizes, count, fees):
-    sizesstr = ",".join(str(x) for x in sizes)
-    countstr = ",".join(str(x) for x in count)
-    feesstr = ",".join(str(x) for x in fees)
+    # The values end up in SQL and in mempool.log, which is served as
+    # JavaScript: make sure they are plain integers whatever bitcoind sent.
+    sizesstr = ",".join(str(int(x)) for x in sizes)
+    countstr = ",".join(str(int(x)) for x in count)
+    feesstr = ",".join(str(int(x)) for x in fees)
     with open(MEMPOOLLOG, "a") as logfile:
         logfile.write("[{:d},[{}],[{}],[{}]],\n"
                       .format(timestamp, countstr, sizesstr, feesstr))
