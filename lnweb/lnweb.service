@@ -7,9 +7,9 @@ After=network.target lnd.service
 User=lnweb
 Group=lnweb
 ExecStart=/home/lnd/python3/bin/python /usr/local/lib/lnweb/lnweb.py \
-    --tlscert /etc/lnweb/tls.cert \
+    --tlscert /home/lnd/.lnd/tls.cert \
     --macaroon /etc/lnweb/lnweb.macaroon \
-    --lnurlp /home/mempool/mempool/web/.well-known/lnurlp/mempool
+    --lnurlp https://jhoenicke.de/.well-known/lnurlp/mempool
 Restart=always
 RestartSec=5
 

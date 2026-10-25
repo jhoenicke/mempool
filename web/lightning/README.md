@@ -32,7 +32,7 @@ sudo -u lnd -H lncli \
     uri:/lnrpc.Lightning/SubscribeInvoices
 sudo install -m 640 -g lnweb /tmp/lnweb.macaroon /etc/lnweb/lnweb.macaroon
 sudo rm /tmp/lnweb.macaroon
-sudo install -m 644 /home/lnd/.lnd/tls.cert /etc/lnweb/tls.cert
+sudo setfacl -m u:lnweb:x /home/lnd /home/lnd/.lnd
 sudo install -m 644 lnweb/lnweb.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now lnweb
@@ -46,14 +46,25 @@ and `macaroons.db` out of the directory and restart it.  This also creates a
 new root key, so all previously issued macaroons become invalid.
 
 Adjust the paths in `lnweb.service` (python from the virtualenv, the
-`.well-known/lnurlp/` file) to your setup.  The `lnweb` user needs read
-access to the virtualenv.  The LNURL metadata is read from the
-`.well-known/lnurlp/` file, so its description hash always matches what the
-wallet got.  When lnd regenerates its certificate, copy `tls.cert` again.
+`.well-known/lnurlp/` URL) to your setup.  The `lnweb` user needs read
+access to the virtualenv.
 
-Since nothing else reads them anymore, `invoice.macaroon`, `tls.cert` and the
-lnd directories don't need to be world readable or traversable.  Make sure
-`admin.macaroon`, `tls.key` and `wallet.db` are only readable by lnd.
+The service reads `tls.cert` directly from lnd's directory and checks every
+few seconds whether it changed, so when lnd regenerates its self-signed
+certificate (it does so on startup once the old one expired), the service
+picks it up without anything to copy or restart.  The `setfacl` above lets
+`lnweb` only traverse the two directories, without listing them; it can
+read `tls.cert` because lnd creates it world readable, but nothing else,
+since lnd keeps `tls.key`, the macaroons and `data/` private.  Without ACL
+support, `chmod o+x` on both directories works too, for all users.  Make
+sure `admin.macaroon`, `tls.key` and `wallet.db` are only readable by lnd;
+`invoice.macaroon` doesn't need to be readable by anyone else either.
+
+The LNURL metadata is fetched from the `.well-known/lnurlp/` URL that
+wallets use, so the description hash in the invoices always matches what
+the wallet got, even if the file is served from another server.  It is
+refetched every hour; if a fetch fails, the last good copy stays in use.
+`--lnurlp` also accepts a local file, which is read once at startup.
 
 Then let the web server forward `/lnd/` to the service.  I use lighttpd with:
 
