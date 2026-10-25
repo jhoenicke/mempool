@@ -43,6 +43,18 @@ try {
         $increment = 1;
     }
     /*
+     * Bound the answer to about $maxpoints samples, so a huge range at
+     * full resolution can't dump the whole table.  The ladder below rounds
+     * the increment down, so up to 6x as many rows are still possible.
+     * Computed in float, since start and end are arbitrary user input;
+     * increments beyond the coarsest ladder step make no difference.
+     */
+    $maxpoints = 2000;
+    $minincrement = ((float)$end - (float)$start) / (60 * $maxpoints);
+    if ($increment < $minincrement) {
+        $increment = (int)min(ceil($minincrement), 1440);
+    }
+    /*
      * Resolution ladder (minutes between samples).  Each step divides the
      * next, so the persistent generated column `res` (the coarsest level a
      * row belongs to) makes "every Nth minute" a sargable index lookup:
@@ -80,8 +92,9 @@ try {
     echo "]);\n";
     exit;
 } catch (PDOException $ex) {
+    // Details only to the server log: the trace can contain the DB password.
+    error_log("db.php: " . $ex);
     header('HTTP/1.1 500 Internal Server Error');
-    echo $ex->getMessage().$ex;
     exit;
 }
 ?>
