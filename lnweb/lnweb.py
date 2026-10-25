@@ -33,6 +33,7 @@
 import argparse
 import codecs
 import hashlib
+import ipaddress
 import json
 import os
 import re
@@ -152,6 +153,12 @@ class Lnd:
                         entry = self.waiters.get(rhash)
                         if entry:
                             entry[0].set()
+                print("invoice subscription ended, reconnecting",
+                      file=sys.stderr)
+            except grpc.RpcError as e:
+                # e.g. lnd restarting; keep it to one line every 5 seconds
+                print("invoice subscription failed: %s %s, reconnecting"
+                      % (e.code(), e.details()), file=sys.stderr)
             except Exception:
                 traceback.print_exc()
             time.sleep(5)
@@ -237,6 +244,20 @@ class Service:
         return {"pr": invoice.payment_request, "routes": []}
 
 
+def client_key(ip):
+    """Key for the per-IP limits.  An IPv6 client usually owns a whole /64,
+    so group by that; otherwise it could pick a fresh address per request."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if addr.version == 6:
+        if addr.ipv4_mapped:
+            return str(addr.ipv4_mapped)
+        return str(ipaddress.ip_network((addr, 64), strict=False))
+    return str(addr)
+
+
 def count_up(counts, key):
     counts[key] = counts.get(key, 0) + 1
 
@@ -264,7 +285,8 @@ class Handler(BaseHTTPRequestHandler):
         form = parse_qs(url.query)
         # lighttpd's mod_proxy adds the client address as last entry.
         forwarded = self.headers.get("X-Forwarded-For", "")
-        ip = forwarded.split(",")[-1].strip() or self.client_address[0]
+        ip = client_key(forwarded.split(",")[-1].strip() or
+                        self.client_address[0])
         try:
             if url.path == "/lnd/invoice.py":
                 self.reply(200, self.server.service.invoice(ip, form))
@@ -288,9 +310,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         # The page POSTs with an empty body; all parameters are in the URL.
-        length = int(self.headers.get("Content-Length") or 0)
-        if length > 0:
-            self.rfile.read(min(length, 65536))
+        # Refuse a body instead of reading it.
+        if (self.headers.get("Content-Length", "0").strip() != "0" or
+                "Transfer-Encoding" in self.headers):
+            self.reply(400, {"status": "ERROR", "reason": "Unexpected body"})
+            return
         self.route()
 
     def reply(self, status, obj):
