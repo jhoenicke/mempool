@@ -25,7 +25,9 @@ sudo useradd --system --no-create-home --shell /usr/sbin/nologin lnweb
 sudo install -d -m 755 /usr/local/lib/lnweb
 sudo install -m 644 lnweb/lnweb.py /usr/local/lib/lnweb/
 sudo install -d -m 750 -g lnweb /etc/lnweb
-sudo -u lnd lncli bakemacaroon --save_to /tmp/lnweb.macaroon \
+sudo -u lnd -H lncli \
+    --macaroonpath /home/lnd/.lnd/data/chain/bitcoin/mainnet/admin.macaroon \
+    bakemacaroon --save_to /tmp/lnweb.macaroon \
     uri:/lnrpc.Lightning/AddInvoice uri:/lnrpc.Lightning/LookupInvoice \
     uri:/lnrpc.Lightning/SubscribeInvoices
 sudo install -m 640 -g lnweb /tmp/lnweb.macaroon /etc/lnweb/lnweb.macaroon
@@ -35,6 +37,13 @@ sudo install -m 644 lnweb/lnweb.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now lnweb
 ```
+
+If `bakemacaroon` fails with "permission denied", the admin macaroon is
+probably older than lnd 0.9 and lacks the `macaroon:generate` permission
+(check with `lncli printmacaroon --macaroon_file ...`).  lnd never
+regenerates existing macaroon files: stop lnd, move all `*.macaroon` files
+and `macaroons.db` out of the directory and restart it.  This also creates a
+new root key, so all previously issued macaroons become invalid.
 
 Adjust the paths in `lnweb.service` (python from the virtualenv, the
 `.well-known/lnurlp/` file) to your setup.  The `lnweb` user needs read
@@ -49,16 +58,18 @@ lnd directories don't need to be world readable or traversable.  Make sure
 Then let the web server forward `/lnd/` to the service.  I use lighttpd with:
 
 ```
-server.modules += ( "mod_proxy", "mod_evasive" )
+server.modules += ( "mod_proxy" )
 
 $HTTP["url"] =~ "^/lnd/" {
     proxy.server = ( "" => (( "host" => "127.0.0.1", "port" => 8089 )) )
-    evasive.max-conns-per-ip = 8
 }
 ```
 
-The service takes the client address for its per-IP limits from the last
-entry of the `X-Forwarded-For` header that mod_proxy adds.
+The service enforces its per-client limits itself (IPv6 clients are grouped
+by /64), so no web server module like mod_evasive is needed; that one counts
+connections, which says little with HTTP/2.  It takes the client address
+from the last entry of the `X-Forwarded-For` header that mod_proxy adds, so
+make sure mod_extforward doesn't trust arbitrary clients.
 
 `check-invoice.py` waits up to a minute until the invoice is settled.  If too
 many requests already wait (in total, from the same IP, or for the same
