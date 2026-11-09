@@ -1,0 +1,4 @@
+/mempoold
+/mempoold-amd64
+/*.state
+/*.state.tmp

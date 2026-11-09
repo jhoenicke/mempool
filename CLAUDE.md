@@ -83,6 +83,8 @@ steps `[1, 2, 10, 60, 360, 1440]` minutes (each divides the next), so
 
 - `eth/` — separate Ethereum pipeline (own `mempool.sh`, DB `eth_mempool`, fed by
   `geth txpool.inspect` via `parse_inspect.pl` / `txpool_parse.py`).
+  `eth/mempoold/` is a Go daemon (not yet wired into `mempool.sh`) that keeps
+  its own unbounded pending pool via the node's subscriptions; see its README.
 - `web/lightning/`, `lnweb/` — Lightning donation / LNURL invoicing; `lnweb.py`
   is a standalone service the web server proxies `/lnd/` to (see
   `web/lightning/README.md`).
