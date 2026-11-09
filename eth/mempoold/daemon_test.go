@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -38,6 +39,7 @@ func jsonHead(n uint64) map[string]any {
 		"number":     fmt.Sprintf("0x%x", n),
 		"hash":       blockHash(n),
 		"parentHash": blockHash(n - 1),
+		"timestamp":  fmt.Sprintf("0x%x", n*12),
 	}
 }
 
@@ -146,7 +148,13 @@ func TestDaemon(t *testing.T) {
 	hs := httptest.NewServer(srv.WebsocketHandler([]string{"*"}))
 	defer hs.Close()
 
-	d := &daemon{url: "ws://" + hs.Listener.Addr().String(), pool: newPool()}
+	dir := t.TempDir()
+	d := &daemon{
+		url:     "ws://" + hs.Listener.Addr().String(),
+		pool:    newPool(),
+		samples: dir + "/samples.log",
+		hook:    "echo ran >> " + dir + "/hook",
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go d.run(ctx)
@@ -180,6 +188,37 @@ func TestDaemon(t *testing.T) {
 	d.mu.Unlock()
 	if n != 4 {
 		t.Fatalf("numTxs = %d, want 4", n)
+	}
+
+	// Block 101 (time 1212) was the first one in its minute and sampled
+	// after alice's nonce 5 was mined.  Blocks 102-104 are in the same
+	// minute, block 105 (time 1260) starts the next one.
+	for n := uint64(102); n <= 105; n++ {
+		f.notify(1, jsonHead(n))
+	}
+	waitFor(t, "hook", func() bool {
+		hook, _ := os.ReadFile(dir + "/hook")
+		d.mu.Lock()
+		defer d.mu.Unlock()
+		return d.head.Number == 105 && !d.hookRunning && len(hook) > 0
+	})
+	data, err := os.ReadFile(d.samples)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
+	if len(lines) != 2 || !strings.HasPrefix(lines[0], "[1212,[") || !strings.HasPrefix(lines[1], "[1260,[") {
+		t.Fatalf("samples:\n%s", data)
+	}
+	var row []any
+	if err := json.Unmarshal([]byte(strings.TrimSuffix(lines[0], ",")), &row); err != nil {
+		t.Fatal(err)
+	}
+	if got := fmt.Sprint(row[1].([]any)[39]); got != "1" { // bob at 3 gwei
+		t.Fatalf("count at 3 gwei = %s in %s", got, lines[0])
+	}
+	if lastSampleMinute(d.samples) != 21 {
+		t.Fatalf("lastSampleMinute = %d", lastSampleMinute(d.samples))
 	}
 }
 

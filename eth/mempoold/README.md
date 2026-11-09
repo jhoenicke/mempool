@@ -30,11 +30,18 @@ counted.  The pool is saved to `-state` every 5 minutes and on exit.
 
 Geth needs `--ws --ws.api eth,txpool` (or use its IPC path for `-node`).
 
+To run it as a service, see `mempoold.service`.
+
+## Samples
+
+With `-samples FILE`, a sample line is appended to FILE right after the
+first block of each minute, timestamped with that block's time, so all
+samples show the pool at the same point of a block's slot.  The `-exec`
+command runs after each sample; `push.sh` sends the lines not pushed yet
+to `addlog.sh` on the web server over a persistent ssh connection
+(edit `REMOTE` and `ADDLOG` in it; the node host's ssh key must be allowed
+on the web server).  A failed push is retried with the next sample.
+
 `curl http://127.0.0.1:8549/status` shows the pool size and sync state.
-`/stats` returns the sample line, or 503 until the initial sync is done.
-To switch `eth/mempool.sh` over, replace the `geth --exec ... | perl
-parse_inspect.pl` line with
-
-    LINE=$(curl -sf http://127.0.0.1:8549/stats) || { rmdir $DESTDIR/LOCK; exit 1; }
-
-and, since a row has 1 + 3*70 values, its `cut -d, -f1-139` with `-f1-211`.
+`/stats` returns the current pool as a sample line, or 503 until the initial
+sync is done.  A row has 1 + 3*70 values: `cut -d, -f1-211`.

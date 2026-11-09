@@ -1,0 +1,29 @@
+# Install as /etc/systemd/system/mempoold.service, then
+#   systemctl daemon-reload && systemctl enable --now mempoold
+# Paths assume the setup of eth/mempool.sh (user ethereum, MEMPOOLHOME).
+
+[Unit]
+Description=Ethereum mempool tracker for mempool statistics
+After=network.target
+
+[Service]
+User=ethereum
+WorkingDirectory=/home/ethereum/mempool
+# -node can also be geth's IPC path, e.g. /home/ethereum/.ethereum/geth.ipc
+ExecStart=/home/ethereum/mempool/mempoold \
+    -node ws://127.0.0.1:8546 \
+    -state /home/ethereum/mempool/mempoold.state \
+    -samples /home/ethereum/mempool/samples.log \
+    -exec "/home/ethereum/mempool/push.sh /home/ethereum/mempool/samples.log"
+# The daemon reconnects to the node by itself; this only covers crashes.
+Restart=always
+RestartSec=10
+# SIGTERM saves the state; give it time for a big pool.
+TimeoutStopSec=60
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

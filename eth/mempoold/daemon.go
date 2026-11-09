@@ -26,6 +26,7 @@ type header struct {
 	Number     hexutil.Uint64 `json:"number"`
 	Hash       common.Hash    `json:"hash"`
 	ParentHash common.Hash    `json:"parentHash"`
+	Time       hexutil.Uint64 `json:"timestamp"`
 }
 
 // rpcTx is the part of a JSON-RPC transaction object we need.
@@ -52,7 +53,9 @@ func (t *rpcTx) tx(now int64) tx {
 }
 
 type daemon struct {
-	url string
+	url     string
+	samples string // file to append the per-minute samples to
+	hook    string // shell command to run after each sample
 
 	mu       sync.Mutex
 	pool     *pool
@@ -60,6 +63,10 @@ type daemon struct {
 	synced   bool   // txpool_content was merged since connecting
 	ready    bool   // synced and all nonces looked up once: stats are valid
 	noTxpool bool   // node has no txpool_content
+
+	lastMinute  int64 // unix minute of the last block sampled
+	hookRunning bool
+	hookAgain   bool // a sample was written while the hook was running
 }
 
 // run connects to the node and follows it until an error occurs.
@@ -170,7 +177,21 @@ func (d *daemon) followHeads(ctx context.Context, c *rpc.Client, sub *rpc.Client
 			d.pool.requestLookup(addr)
 		}
 		d.head = h
+		// Sample the pool right after the first block of each minute, so
+		// all samples are taken at the same point of a block's slot.
+		var sample string
+		if minute := int64(h.Time) / 60; d.samples != "" && minute > d.lastMinute {
+			d.lastMinute = minute
+			if d.ready {
+				sample = d.sampleLocked(int64(h.Time))
+			} else {
+				log.Printf("block %d: not synced, skipping sample", h.Number)
+			}
+		}
 		d.mu.Unlock()
+		if sample != "" {
+			d.writeSample(sample)
+		}
 	}
 }
 

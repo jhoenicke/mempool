@@ -1,6 +1,6 @@
 // mempoold keeps its own copy of an Ethereum node's pending transactions,
-// grouped by sender, and serves the mempool statistics in the format of
-// mempool.log.  Unlike the node's own pool it is not limited in size, so it
+// grouped by sender, and writes the mempool statistics in the format of
+// mempool.log after the first block of each minute.  Unlike the node's own pool it is not limited in size, so it
 // also covers the low fee transactions the node evicts.
 package main
 
@@ -26,17 +26,22 @@ var (
 	state    = flag.String("state", "mempoold.state", "file the pool is saved to")
 	lifetime = flag.Duration("lifetime", 12*time.Hour, "drop txs the node hasn't reported for this long")
 	maxTxs   = flag.Int("maxtxs", 1000000, "maximum number of txs to keep")
+	samples  = flag.String("samples", "", "file to append a sample to after the first block of each minute")
+	hook     = flag.String("exec", "", "shell command to run after each sample, e.g. push.sh")
 )
 
 const saveInterval = 5 * time.Minute
 
 func main() {
 	flag.Parse()
-	d := &daemon{url: *nodeURL, pool: newPool()}
+	d := &daemon{url: *nodeURL, pool: newPool(), samples: *samples, hook: *hook}
 	if err := load(d.pool, *state); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatalf("loading %s: %v", *state, err)
 	}
 	log.Printf("loaded %d txs from %d senders", d.pool.numTxs, len(d.pool.accounts))
+	if *samples != "" {
+		d.lastMinute = lastSampleMinute(*samples)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -127,18 +132,15 @@ func load(p *pool, path string) error {
 	return nil
 }
 
-// serveStats prints the current sample as a mempool.log line.
+// serveStats prints the current pool as a mempool.log line.
 func (d *daemon) serveStats(w http.ResponseWriter, r *http.Request) {
 	d.mu.Lock()
+	defer d.mu.Unlock()
 	if !d.ready {
-		d.mu.Unlock()
 		http.Error(w, "not synced", http.StatusServiceUnavailable)
 		return
 	}
-	count, size, fees := d.pool.stats()
-	d.mu.Unlock()
-	fmt.Fprintf(w, "[%d,[%s],[%s],[%s]],\n", time.Now().Unix(),
-		join(count), join(size), join(fees))
+	fmt.Fprint(w, d.sampleLocked(time.Now().Unix()))
 }
 
 func (d *daemon) serveStatus(w http.ResponseWriter, r *http.Request) {
