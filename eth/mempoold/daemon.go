@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"regexp"
+	"strconv"
 	"sync"
 	"time"
 
@@ -19,7 +21,7 @@ import (
 
 const (
 	lookupBatch  = 500              // nonce queries per JSON-RPC batch
-	syncInterval = 10 * time.Minute // how often to merge txpool_content
+	syncInterval = 10 * time.Minute // how often to merge txpool_inspect
 )
 
 type header struct {
@@ -60,9 +62,9 @@ type daemon struct {
 	mu       sync.Mutex
 	pool     *pool
 	head     header // latest block processed
-	synced   bool   // txpool_content was merged since connecting
+	synced   bool   // txpool_inspect was merged since connecting
 	ready    bool   // synced and all nonces looked up once: stats are valid
-	noTxpool bool   // node has no txpool_content
+	noTxpool bool   // node has no txpool_inspect
 
 	lastMinute  int64 // unix minute of the last block sampled
 	hookRunning bool
@@ -88,7 +90,7 @@ func (d *daemon) run(ctx context.Context) error {
 	d.pool.forget()
 	d.mu.Unlock()
 
-	// Subscribe before fetching txpool_content, so no tx falls in between.
+	// Subscribe before fetching txpool_inspect, so no tx falls in between.
 	pending := make(chan json.RawMessage, 4096)
 	psub, err := c.EthSubscribe(ctx, pending, "newPendingTransactions", true)
 	if err != nil {
@@ -204,13 +206,14 @@ func (d *daemon) lookupNonces(ctx context.Context, c *rpc.Client) error {
 		d.mu.Lock()
 		addrs := d.pool.lookupList(lookupBatch)
 		head := d.head
-		if len(addrs) == 0 && d.synced && !d.ready {
-			log.Printf("synced: %d txs from %d senders", d.pool.numTxs, len(d.pool.accounts))
-			d.ready = true
-		}
+		// If addrs is the whole backlog, looking it up gives a nonce to all
+		// senders of the merged pool.  New senders keep arriving, so don't
+		// wait for an empty backlog.
+		initial := d.synced && !d.ready && len(addrs) < lookupBatch
 		d.mu.Unlock()
 
 		failed := 0
+		exact := true
 		if len(addrs) > 0 {
 			nonces := make([]hexutil.Uint64, len(addrs))
 			batch := make([]rpc.BatchElem, len(addrs))
@@ -226,7 +229,7 @@ func (d *daemon) lookupNonces(ctx context.Context, c *rpc.Client) error {
 				return fmt.Errorf("eth_getTransactionCount: %w", err)
 			}
 			d.mu.Lock()
-			exact := d.head.Hash == head.Hash
+			exact = d.head.Hash == head.Hash
 			for i, addr := range addrs {
 				if batch[i].Error != nil {
 					failed++
@@ -240,6 +243,12 @@ func (d *daemon) lookupNonces(ctx context.Context, c *rpc.Client) error {
 					failed, head.Hash, batch[0].Error)
 			}
 		}
+		if initial && exact && failed == 0 {
+			d.mu.Lock()
+			log.Printf("synced: %d txs from %d senders", d.pool.numTxs, len(d.pool.accounts))
+			d.ready = true
+			d.mu.Unlock()
+		}
 		// Continue right away while there is a backlog.
 		if len(addrs) < lookupBatch || failed > 0 {
 			select {
@@ -251,37 +260,51 @@ func (d *daemon) lookupNonces(ctx context.Context, c *rpc.Client) error {
 	}
 }
 
+// inspectRe matches the gas and gas price at the end of a txpool_inspect
+// entry: "<to>: <value> wei + <gas> gas × <gasprice> wei".
+var inspectRe = regexp.MustCompile(`(\d+) gas \S+ (\d+) wei$`)
+
 // syncTxpool periodically merges the node's whole pool: initially to learn
 // the txs that were pending before we subscribed, later to refresh LastSeen
 // of the txs the node still has and to catch anything we missed.
+// txpool_inspect has all we need: for EIP-1559 txs its gas price is the fee
+// cap.  It is much smaller than txpool_content, which over a slow link can
+// exceed geth's 10s write timeout and then arrives truncated.
 func (d *daemon) syncTxpool(ctx context.Context, c *rpc.Client) error {
 	for {
 		var content struct {
-			Pending map[common.Address]map[string]rpcTx `json:"pending"`
-			Queued  map[common.Address]map[string]rpcTx `json:"queued"`
+			Pending map[common.Address]map[string]string `json:"pending"`
+			Queued  map[common.Address]map[string]string `json:"queued"`
 		}
-		err := c.CallContext(ctx, &content, "txpool_content")
+		err := c.CallContext(ctx, &content, "txpool_inspect")
 		var rpcErr rpc.Error
 		if errors.As(err, &rpcErr) {
 			// e.g. Besu: rely on the subscription alone
 			d.mu.Lock()
 			if !d.noTxpool {
-				log.Printf("txpool_content not available: %v", err)
+				log.Printf("txpool_inspect not available: %v", err)
 				d.noTxpool = true
 			}
 			d.synced = true
 			d.mu.Unlock()
 			return nil
 		} else if err != nil {
-			return fmt.Errorf("txpool_content: %w", err)
+			return fmt.Errorf("txpool_inspect: %w", err)
 		}
 		now := time.Now().Unix()
 		d.mu.Lock()
-		for _, txs := range []map[common.Address]map[string]rpcTx{content.Pending, content.Queued} {
-			for _, byNonce := range txs {
-				for _, t := range byNonce {
+		for _, txs := range []map[common.Address]map[string]string{content.Pending, content.Queued} {
+			for from, byNonce := range txs {
+				for nonce, entry := range byNonce {
+					n, err := strconv.ParseUint(nonce, 10, 64)
+					m := inspectRe.FindStringSubmatch(entry)
+					if err != nil || m == nil {
+						continue
+					}
+					gas, _ := strconv.ParseUint(m[1], 10, 64)
+					wei, _ := strconv.ParseFloat(m[2], 64)
 					// the subscription may already have delivered a replacement
-					d.pool.add(t.From, uint64(t.Nonce), t.tx(now), false)
+					d.pool.add(from, n, tx{Gas: gas, FeeCap: wei / 1e9, LastSeen: now}, false)
 				}
 			}
 		}

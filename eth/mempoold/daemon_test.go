@@ -96,7 +96,7 @@ func (f *fakeNode) GetTransactionCount(addr common.Address, at json.RawMessage) 
 
 type fakeTxpool struct{ f *fakeNode }
 
-func (t fakeTxpool) Content() map[string]any {
+func (t fakeTxpool) Inspect() map[string]any {
 	t.f.mu.Lock()
 	defer t.f.mu.Unlock()
 	return t.f.txpool
@@ -135,8 +135,8 @@ func TestDaemon(t *testing.T) {
 		txpool: map[string]any{
 			"pending": map[string]any{
 				alice.Hex(): map[string]any{
-					"5": jsonTx(alice, 5, 10),
-					"6": jsonTx(alice, 6, 20),
+					"5": "0x00000000000000000000000000000000000000b0: 0 wei + 21000 gas × 10000000000 wei",
+					"6": "contract creation: 1 wei + 21000 gas × 20000000000 wei",
 				},
 			},
 			"queued": map[string]any{},

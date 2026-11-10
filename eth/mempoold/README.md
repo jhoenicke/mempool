@@ -10,7 +10,7 @@ It follows the node over websocket or IPC:
 
 - `eth_subscribe newPendingTransactions` (with full transactions) for new txs.
   Geth takes `true`, Besu `{"includeTransactions": true}`; both are tried.
-- `txpool_content` at start and every 10 minutes, for txs that were pending
+- `txpool_inspect` at start and every 10 minutes, for txs that were pending
   before subscribing and to refresh the ones the node still holds.  Without it
   (Besu), the subscription is the only source.
 - `eth_subscribe newHeads` + `eth_getBlockByHash` to raise the senders' nonces

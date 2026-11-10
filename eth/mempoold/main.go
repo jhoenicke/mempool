@@ -147,7 +147,7 @@ func (d *daemon) serveStatus(w http.ResponseWriter, r *http.Request) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	lookups := len(d.pool.lookupList(-1))
-	fmt.Fprintf(w, "ready: %v\nhead: %d %s\ntxs: %d\nsenders: %d\nnonce lookups pending: %d\ntxpool_content: %v\n",
+	fmt.Fprintf(w, "ready: %v\nhead: %d %s\ntxs: %d\nsenders: %d\nnonce lookups pending: %d\ntxpool_inspect: %v\n",
 		d.ready, d.head.Number, d.head.Hash, d.pool.numTxs, len(d.pool.accounts),
 		lookups, !d.noTxpool)
 }

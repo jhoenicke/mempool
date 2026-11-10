@@ -2,3 +2,5 @@
 /mempoold-amd64
 /*.state
 /*.state.tmp
+/*.log
+/*.log.pushed
