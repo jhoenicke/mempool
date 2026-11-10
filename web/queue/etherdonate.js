@@ -21,19 +21,19 @@ const ethNetworks = {
             {
                 token: "0x6b175474e89094c44da98b954eedeac495271d0f",
                 symbol: "DAI",
-                cgid: "usd",
+                cgid: "dai",
                 decimals: 18,
             },
             {
                 token: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                 symbol: "USDC",
-                cgid: "usd",
+                cgid: "usd-coin",
                 decimals: 6,
             },
             {
                 token: "0xdac17f958d2ee523a2206206994597c13d831ec7",
                 symbol: "USDT",
-                cgid: "usd",
+                cgid: "tether",
                 decimals: 6,
             },
         ],
@@ -52,19 +52,19 @@ const ethNetworks = {
             {
                 token: "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
                 symbol: "DAI",
-                cgid: "usd",
+                cgid: "dai",
                 decimals: 18,
             },
             {
                 token: "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
                 symbol: "USDC",
-                cgid: "usd",
+                cgid: "usd-coin",
                 decimals: 6,
             },
             {
                 token: "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
                 symbol: "USDT",
-                cgid: "usd",
+                cgid: "tether",
                 decimals: 6,
             },
         ],
@@ -84,19 +84,19 @@ const ethNetworks = {
             {
                 token: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
                 symbol: "USDT",
-                cgid: "usd",
+                cgid: "tether",
                 decimals: 6,
             },
             {
                 token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
                 symbol: "USDC",
-                cgid: "usd",
+                cgid: "usd-coin",
                 decimals: 6,
             },
             {
                 token: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
                 symbol: "DAI",
-                cgid: "usd",
+                cgid: "dai",
                 decimals: 18,
             },
         ],
@@ -115,19 +115,19 @@ const ethNetworks = {
             {
                 token: "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
                 symbol: "DAI",
-                cgid: "usd",
+                cgid: "dai",
                 decimals: 18,
             },
             {
                 token: "0x7f5c764cbc14f9669b88837ca1490cca17c31607",
                 symbol: "USDC",
-                cgid: "usd",
+                cgid: "usd-coin",
                 decimals: 6,
             },
             {
                 token: "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
                 symbol: "USDT",
-                cgid: "usd",
+                cgid: "tether",
                 decimals: 6,
             },
         ],
@@ -140,7 +140,7 @@ const ethNetworks = {
             {
                 token: 0,
                 symbol: "xDAI",
-                cgid: "usd",
+                cgid: "xdai",
                 decimals: 18
             },
             {
@@ -166,19 +166,19 @@ const ethNetworks = {
             {
                 token: "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
                 symbol: "DAI",
-                cgid: "usd",
+                cgid: "dai",
                 decimals: 18,
             },
             {
                 token: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
                 symbol: "USDC",
-                cgid: "usd",
+                cgid: "usd-coin",
                 decimals: 6,
             },
             {
                 token: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
                 symbol: "USDT",
-                cgid: "usd",
+                cgid: "tether",
                 decimals: 6,
             },
         ],
@@ -349,8 +349,11 @@ function updateAmount(event) {
 }
 
 function getCoinGeckoPrices() {
+    const cgids = new Set();
+    Object.values(ethNetworks).forEach(net => net.tokens.forEach(tk => cgids.add(tk.cgid)));
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Cethereum%2Cusd&vs_currencies=eur");
+    xhr.open("GET", "https://api.coingecko.com/api/v3/simple/price?ids=" +
+             encodeURIComponent([...cgids].join(",")) + "&vs_currencies=eur");
     xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
             cgPrices = JSON.parse(xhr.response);
